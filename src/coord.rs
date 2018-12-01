@@ -89,7 +89,7 @@ impl Size {
     }
 
     /// Return the number of cells in a 2D grid of this size.
-    pub fn count(&self) -> usize {
+    pub fn count(self) -> usize {
         (self.x * self.y) as usize
     }
 }
