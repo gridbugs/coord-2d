@@ -69,12 +69,22 @@ impl Size {
     }
 
     /// Returns the width.
-    pub fn x(&self) -> u32 {
+    pub fn width(self) -> u32 {
+        self.x
+    }
+
+    /// Alias for `width`.
+    pub fn x(self) -> u32 {
         self.x
     }
 
     /// Returns the height.
-    pub fn y(&self) -> u32 {
+    pub fn height(self) -> u32 {
+        self.y
+    }
+
+    /// Alias for `height`.
+    pub fn y(self) -> u32 {
         self.y
     }
 
