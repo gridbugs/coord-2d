@@ -1,5 +1,5 @@
 /// General purpose coordinate
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default, PartialOrd, Ord)]
 pub struct Coord {
     pub x: i32,
@@ -50,7 +50,7 @@ impl From<[i32; 2]> for Coord {
 
 /// A size cannot be created which would contain un-addressable cells.
 /// That is, the maximum size has a width and height of one greater than the maximum `i32`.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default, PartialOrd, Ord)]
 pub struct Size {
     x: u32,

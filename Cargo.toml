@@ -9,6 +9,8 @@ homepage = "https://github.com/stevebob/coord-2d.git"
 repository = "https://github.com/stevebob/coord-2d.git"
 documentation = "https://docs.rs/coord_2d"
 
+[features]
+serialize = ["serde"]
 
 [dependencies]
 serde = { version = "1.0", features = ["serde_derive"], optional = true }
