@@ -42,11 +42,13 @@ pub trait StaticAxis: private::Sealed {
     fn new_coord(this_axis: i32, other_axis: i32) -> Coord;
     fn coord_get(coord: Coord) -> i32;
     fn coord_get_mut(coord: &mut Coord) -> &mut i32;
+    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, f: F) -> Coord;
     fn coord_set(coord: Coord, value: i32) -> Coord;
     fn coord_set_in_place(coord: &mut Coord, value: i32);
     fn try_new_size(this_axis: u32, other_axis: u32) -> Result<Size, DimensionTooLargeForSize>;
     fn size_get(size: Size) -> u32;
     fn size_get_mut(size: &mut Size) -> &mut u32;
+    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, f: F) -> Size;
     fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize>;
     fn try_size_set_in_place(size: &mut Size, value: u32) -> Result<(), DimensionTooLargeForSize>;
     fn size_set(size: Size, value: u32) -> Size {
@@ -105,6 +107,12 @@ impl StaticAxis for static_axis::X {
     fn coord_get_mut(coord: &mut Coord) -> &mut i32 {
         &mut coord.x
     }
+    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, mut f: F) -> Coord {
+        Coord {
+            x: f(coord.x),
+            ..coord
+        }
+    }
     fn coord_set(coord: Coord, value: i32) -> Coord {
         Coord { x: value, ..coord }
     }
@@ -119,6 +127,12 @@ impl StaticAxis for static_axis::X {
     }
     fn size_get_mut(size: &mut Size) -> &mut u32 {
         &mut size.x
+    }
+    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, mut f: F) -> Size {
+        Size {
+            x: f(size.x),
+            ..size
+        }
     }
     fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize> {
         check_size_limit(value)?;
@@ -145,6 +159,12 @@ impl StaticAxis for static_axis::Y {
     fn coord_get_mut(coord: &mut Coord) -> &mut i32 {
         &mut coord.y
     }
+    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, mut f: F) -> Coord {
+        Coord {
+            y: f(coord.y),
+            ..coord
+        }
+    }
     fn coord_set(coord: Coord, value: i32) -> Coord {
         Coord { y: value, ..coord }
     }
@@ -156,6 +176,12 @@ impl StaticAxis for static_axis::Y {
     }
     fn size_get_mut(size: &mut Size) -> &mut u32 {
         &mut size.y
+    }
+    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, mut f: F) -> Size {
+        Size {
+            y: f(size.y),
+            ..size
+        }
     }
     fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize> {
         check_size_limit(value)?;
@@ -245,6 +271,18 @@ impl Coord {
             Axis::Y => &mut self.y,
         }
     }
+    pub fn with_axis<F: FnMut(i32) -> i32>(self, axis: Axis, mut f: F) -> Self {
+        match axis {
+            Axis::X => Self {
+                x: f(self.x),
+                ..self
+            },
+            Axis::Y => Self {
+                y: f(self.y),
+                ..self
+            },
+        }
+    }
     pub fn set(self, axis: Axis, value: i32) -> Self {
         match axis {
             Axis::X => Self::new(value, self.y),
@@ -265,6 +303,9 @@ impl Coord {
     }
     pub fn get_static_mut<A: StaticAxis>(&mut self) -> &mut i32 {
         A::coord_get_mut(self)
+    }
+    pub fn with_static_axis<A: StaticAxis, F: FnMut(i32) -> i32>(self, f: F) -> Self {
+        A::coord_with_axis(self, f)
     }
     pub fn set_static<A: StaticAxis>(self, value: i32) -> Self {
         A::coord_set(self, value)
@@ -350,6 +391,19 @@ impl Size {
         }
     }
 
+    pub fn with_axis<F: FnMut(u32) -> u32>(self, axis: Axis, mut f: F) -> Self {
+        match axis {
+            Axis::X => Self {
+                x: f(self.x),
+                ..self
+            },
+            Axis::Y => Self {
+                y: f(self.y),
+                ..self
+            },
+        }
+    }
+
     pub fn try_set(self, axis: Axis, value: u32) -> Result<Self, DimensionTooLargeForSize> {
         check_size_limit(value)?;
         Ok(match axis {
@@ -412,6 +466,9 @@ impl Size {
     }
     pub fn get_static_mut<A: StaticAxis>(&mut self) -> &mut u32 {
         A::size_get_mut(self)
+    }
+    pub fn with_static_axis<A: StaticAxis, F: FnMut(u32) -> u32>(self, f: F) -> Self {
+        A::size_with_axis(self, f)
     }
     pub fn try_set_static<A: StaticAxis>(
         self,
