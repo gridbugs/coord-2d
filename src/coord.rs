@@ -222,7 +222,7 @@ pub struct DimensionTooLargeForSize;
 pub struct DimensionTooLargeForCoord;
 
 impl Coord {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
     pub fn from_size(size: Size) -> Result<Self, DimensionTooLargeForCoord> {
@@ -382,6 +382,14 @@ impl Size {
                 );
             }
             Ok(size) => size,
+        }
+    }
+
+    /// Like new, but const and never panics as it's impossible to construct an invalid size
+    pub const fn new_u16(width: u16, height: u16) -> Self {
+        Self {
+            x: width as u32,
+            y: height as u32,
         }
     }
 
