@@ -319,22 +319,22 @@ impl Coord {
     pub fn checked_add(self, rhs: Self) -> Option<Self> {
         self.x
             .checked_add(rhs.x)
-            .and_then(|x| self.y.checked_add(rhs.y).map(|y| Coord::new(x, y)))
+            .and_then(|x| self.y.checked_add(rhs.y).map(|y| Self::new(x, y)))
     }
     pub fn checked_sub(self, rhs: Self) -> Option<Self> {
         self.x
             .checked_sub(rhs.x)
-            .and_then(|x| self.y.checked_sub(rhs.y).map(|y| Coord::new(x, y)))
+            .and_then(|x| self.y.checked_sub(rhs.y).map(|y| Self::new(x, y)))
     }
     pub fn checked_mul(self, rhs: i32) -> Option<Self> {
         self.x
             .checked_mul(rhs)
-            .and_then(|x| self.y.checked_mul(rhs).map(|y| Coord::new(x, y)))
+            .and_then(|x| self.y.checked_mul(rhs).map(|y| Self::new(x, y)))
     }
     pub fn checked_div(self, rhs: i32) -> Option<Self> {
         self.x
             .checked_div(rhs)
-            .and_then(|x| self.y.checked_div(rhs).map(|y| Coord::new(x, y)))
+            .and_then(|x| self.y.checked_div(rhs).map(|y| Self::new(x, y)))
     }
 }
 
@@ -545,6 +545,18 @@ impl Size {
     /// Return the number of cells in a 2D grid of this size.
     pub fn count(self) -> usize {
         (self.x * self.y) as usize
+    }
+
+    pub fn checked_sub(self, rhs: Self) -> Option<Self> {
+        self.x
+            .checked_sub(rhs.x)
+            .and_then(|x| self.y.checked_sub(rhs.y).map(|y| Self::new(x, y)))
+    }
+
+    pub fn saturating_sub(self, rhs: Self) -> Self {
+        let x = self.x.saturating_sub(rhs.x);
+        let y = self.y.saturating_sub(rhs.y);
+        Self::new(x, y)
     }
 }
 
