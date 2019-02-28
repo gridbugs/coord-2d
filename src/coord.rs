@@ -336,6 +336,12 @@ impl Coord {
             .checked_div(rhs)
             .and_then(|x| self.y.checked_div(rhs).map(|y| Self::new(x, y)))
     }
+    pub fn magnitude2(self) -> u32 {
+        (self.x * self.x + self.y * self.y) as u32
+    }
+    pub fn distance2(self, other: Self) -> u32 {
+        (self - other).magnitude2()
+    }
 }
 
 impl From<(i32, i32)> for Coord {
