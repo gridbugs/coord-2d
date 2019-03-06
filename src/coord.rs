@@ -342,6 +342,12 @@ impl Coord {
     pub fn distance2(self, other: Self) -> u32 {
         (self - other).magnitude2()
     }
+    pub fn manhattan_magnitude(self) -> u32 {
+        (self.x.abs() + self.y.abs()) as u32
+    }
+    pub fn manhattan_distance(self, other: Self) -> u32 {
+        (self - other).manhattan_magnitude()
+    }
 }
 
 impl From<(i32, i32)> for Coord {
