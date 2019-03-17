@@ -253,10 +253,8 @@ impl Coord {
         if self.x < 0 || self.y < 0 {
             return false;
         }
-
         let x = self.x as u32;
         let y = self.y as u32;
-
         x < size.x() && y < size.y()
     }
     pub fn get(self, axis: Axis) -> i32 {
