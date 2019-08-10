@@ -314,6 +314,18 @@ impl Coord {
     pub fn new_static_axis<A: StaticAxis>(this_axis: i32, other_axis: i32) -> Self {
         A::new_coord(this_axis, other_axis)
     }
+    pub fn set_x(self, x: i32) -> Self {
+        Self { x, ..self }
+    }
+    pub fn set_y(self, y: i32) -> Self {
+        Self { y, ..self }
+    }
+    pub fn set_x_in_place(&mut self, x: i32) {
+        self.x = x;
+    }
+    pub fn set_y_in_place(&mut self, y: i32) {
+        self.y = y;
+    }
     pub fn checked_add(self, rhs: Self) -> Option<Self> {
         self.x
             .checked_add(rhs.x)
@@ -543,6 +555,38 @@ impl Size {
 
     pub fn new_static_axis<A: StaticAxis>(this_axis: u32, other_axis: u32) -> Self {
         A::new_size(this_axis, other_axis)
+    }
+
+    pub fn try_set_width(self, width: u32) -> Result<Self, DimensionTooLargeForSize> {
+        self.try_set_static::<static_axis::X>(width)
+    }
+
+    pub fn try_set_height(self, height: u32) -> Result<Self, DimensionTooLargeForSize> {
+        self.try_set_static::<static_axis::Y>(height)
+    }
+
+    pub fn set_width(self, width: u32) -> Self {
+        self.set_static::<static_axis::X>(width)
+    }
+
+    pub fn set_height(self, height: u32) -> Self {
+        self.set_static::<static_axis::Y>(height)
+    }
+
+    pub fn try_set_width_in_place(&mut self, width: u32) -> Result<(), DimensionTooLargeForSize> {
+        self.try_set_static_in_place::<static_axis::X>(width)
+    }
+
+    pub fn try_set_height_in_place(&mut self, height: u32) -> Result<(), DimensionTooLargeForSize> {
+        self.try_set_static_in_place::<static_axis::Y>(height)
+    }
+
+    pub fn set_width_in_place(&mut self, width: u32) {
+        self.set_static_in_place::<static_axis::X>(width)
+    }
+
+    pub fn set_height_in_place(&mut self, height: u32) {
+        self.set_static_in_place::<static_axis::Y>(height)
     }
 
     /// Returns the width.
