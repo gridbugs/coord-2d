@@ -581,6 +581,14 @@ impl Size {
         let y = self.y.saturating_sub(rhs.y);
         Self::new(x, y)
     }
+
+    pub const fn max_field() -> u32 {
+        MAX_SIZE_FIELD
+    }
+
+    pub const fn max() -> Self {
+        MAX_SIZE
+    }
 }
 
 impl From<(u32, u32)> for Size {
