@@ -54,7 +54,7 @@ pub trait StaticAxis: private::Sealed {
     fn size_set(size: Size, value: u32) -> Size {
         match Self::try_size_set(size, value) {
             Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, SIZE_MAX);
+                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
             }
             Ok(size) => size,
         }
@@ -62,7 +62,7 @@ pub trait StaticAxis: private::Sealed {
     fn size_set_in_place(size: &mut Size, value: u32) {
         match Self::try_size_set_in_place(size, value) {
             Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, SIZE_MAX);
+                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
             }
             Ok(()) => (),
         }
@@ -72,7 +72,7 @@ pub trait StaticAxis: private::Sealed {
             Err(DimensionTooLargeForSize) => {
                 panic!(
                     "Size is too big: ({}, {}). Max is {}.",
-                    this_axis, other_axis, SIZE_MAX
+                    this_axis, other_axis, MAX_SIZE_FIELD
                 );
             }
             Ok(size) => size,
@@ -86,7 +86,7 @@ pub mod static_axis {
 }
 
 fn check_size_limit(value: u32) -> Result<(), DimensionTooLargeForSize> {
-    if value > SIZE_MAX {
+    if value > MAX_SIZE_FIELD {
         Err(DimensionTooLargeForSize)
     } else {
         Ok(())
@@ -369,7 +369,12 @@ pub struct Size {
     y: u32,
 }
 
-const SIZE_MAX: u32 = ::std::i32::MAX as u32 + 1;
+pub const MAX_SIZE_FIELD: u32 = ::std::i32::MAX as u32 + 1;
+
+pub const MAX_SIZE: Size = Size {
+    x: MAX_SIZE_FIELD,
+    y: MAX_SIZE_FIELD,
+};
 
 impl Size {
     pub fn try_new(width: u32, height: u32) -> Result<Self, DimensionTooLargeForSize> {
@@ -388,7 +393,7 @@ impl Size {
             Err(DimensionTooLargeForSize) => {
                 panic!(
                     "Size is too big: ({}, {}). Max is {}.",
-                    width, width, SIZE_MAX
+                    width, width, MAX_SIZE_FIELD
                 );
             }
             Ok(size) => size,
@@ -459,7 +464,7 @@ impl Size {
     pub fn set(self, axis: Axis, value: u32) -> Self {
         match self.try_set(axis, value) {
             Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, SIZE_MAX);
+                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
             }
             Ok(size) => size,
         }
@@ -481,7 +486,7 @@ impl Size {
     pub fn set_in_place(&mut self, axis: Axis, value: u32) {
         match self.try_set_in_place(axis, value) {
             Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, SIZE_MAX);
+                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
             }
             Ok(()) => (),
         }
