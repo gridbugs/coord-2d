@@ -346,17 +346,43 @@ impl Coord {
             .checked_div(rhs)
             .and_then(|x| self.y.checked_div(rhs).map(|y| Self::new(x, y)))
     }
-    pub fn magnitude2(self) -> u32 {
-        (self.x * self.x + self.y * self.y) as u32
+    pub const fn magnitude2(self) -> u32 {
+        (self.x * self.x) as u32 + (self.y * self.y) as u32
     }
-    pub fn distance2(self, other: Self) -> u32 {
-        (self - other).magnitude2()
+    pub const fn distance2(self, other: Self) -> u32 {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+        .magnitude2()
     }
-    pub fn manhattan_magnitude(self) -> u32 {
-        (self.x.abs() + self.y.abs()) as u32
+    pub const fn manhattan_magnitude(self) -> u32 {
+        self.x.abs() as u32 + self.y.abs() as u32
     }
-    pub fn manhattan_distance(self, other: Self) -> u32 {
-        (self - other).manhattan_magnitude()
+    pub const fn manhattan_distance(self, other: Self) -> u32 {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+        .manhattan_magnitude()
+    }
+    pub const fn opposite(self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+    pub const fn left90(self) -> Self {
+        Self {
+            x: self.y,
+            y: -self.x,
+        }
+    }
+    pub const fn right90(self) -> Self {
+        Self {
+            x: -self.y,
+            y: self.x,
+        }
     }
 }
 
@@ -590,27 +616,27 @@ impl Size {
     }
 
     /// Returns the width.
-    pub fn width(self) -> u32 {
+    pub const fn width(self) -> u32 {
         self.x
     }
 
     /// Alias for `width`.
-    pub fn x(self) -> u32 {
+    pub const fn x(self) -> u32 {
         self.x
     }
 
     /// Returns the height.
-    pub fn height(self) -> u32 {
+    pub const fn height(self) -> u32 {
         self.y
     }
 
     /// Alias for `height`.
-    pub fn y(self) -> u32 {
+    pub const fn y(self) -> u32 {
         self.y
     }
 
     /// Return the number of cells in a 2D grid of this size.
-    pub fn count(self) -> usize {
+    pub const fn count(self) -> usize {
         (self.x * self.y) as usize
     }
 
@@ -661,5 +687,17 @@ mod test {
             Coord::new(-4, 3).normalize(Size::new(3, 1)),
             Coord::new(2, 0)
         );
+    }
+
+    #[test]
+    fn manhattan_dsitance() {
+        assert_eq!(Coord::new(-2, 4).manhattan_distance(Coord::new(5, -2)), 13);
+    }
+
+    #[test]
+    fn rotation() {
+        assert_eq!(Coord::new(2, -3).opposite(), Coord::new(-2, 3));
+        assert_eq!(Coord::new(2, -3).left90(), Coord::new(-3, -2));
+        assert_eq!(Coord::new(2, -3).right90(), Coord::new(3, 2));
     }
 }
