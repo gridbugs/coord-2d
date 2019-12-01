@@ -228,6 +228,12 @@ impl Coord {
     pub fn from_size(size: Size) -> Result<Self, DimensionTooLargeForCoord> {
         size.to_coord()
     }
+    #[cfg(feature = "rand")]
+    pub fn random_within<R: rand::Rng>(size: Size, rng: &mut R) -> Self {
+        let x = rng.gen_range(0, size.width() as i32);
+        let y = rng.gen_range(0, size.height() as i32);
+        Self { x, y }
+    }
     pub fn to_size(self) -> Result<Size, NegativeDimension> {
         if self.x < 0 || self.y < 0 {
             Err(NegativeDimension)
