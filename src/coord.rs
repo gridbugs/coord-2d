@@ -390,6 +390,30 @@ impl Coord {
             y: self.x,
         }
     }
+    pub const fn cardinal_left45(self) -> Self {
+        Self {
+            x: self.y + self.x,
+            y: self.y - self.x,
+        }
+    }
+    pub const fn cardinal_right45(self) -> Self {
+        Self {
+            x: self.x - self.y,
+            y: self.y + self.x,
+        }
+    }
+    pub const fn cardinal_left135(self) -> Self {
+        Self {
+            x: self.y - self.x,
+            y: -self.x - self.y,
+        }
+    }
+    pub const fn cardinal_right135(self) -> Self {
+        Self {
+            x: -self.y - self.x,
+            y: self.x - self.y,
+        }
+    }
 }
 
 impl From<(i32, i32)> for Coord {
@@ -705,5 +729,9 @@ mod test {
         assert_eq!(Coord::new(2, -3).opposite(), Coord::new(-2, 3));
         assert_eq!(Coord::new(2, -3).left90(), Coord::new(-3, -2));
         assert_eq!(Coord::new(2, -3).right90(), Coord::new(3, 2));
+        assert_eq!(Coord::new(0, -1).cardinal_left135(), Coord::new(-1, 1));
+        assert_eq!(Coord::new(0, -1).cardinal_right135(), Coord::new(1, 1));
+        assert_eq!(Coord::new(-1, 0).cardinal_left135(), Coord::new(1, 1));
+        assert_eq!(Coord::new(-1, 0).cardinal_right135(), Coord::new(1, -1));
     }
 }
