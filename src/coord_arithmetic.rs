@@ -1,4 +1,4 @@
-use coord::{Coord, Size};
+use crate::coord::{Coord, Size};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 impl Add for Coord {
@@ -421,7 +421,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use coord::{Coord, Size};
+    use crate::coord::{Coord, Size};
 
     #[test]
     fn arithmetic() {
