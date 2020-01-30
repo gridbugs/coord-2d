@@ -1,5 +1,25 @@
 use crate::coord::{Coord, Size};
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+impl Neg for Coord {
+    type Output = Coord;
+    fn neg(self) -> Self::Output {
+        Coord {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
+impl<'a> Neg for &'a Coord {
+    type Output = Coord;
+    fn neg(self) -> Self::Output {
+        Coord {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
 
 impl Add for Coord {
     type Output = Coord;
