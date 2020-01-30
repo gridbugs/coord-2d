@@ -417,6 +417,10 @@ impl Coord {
             y: self.x - self.y,
         }
     }
+
+    pub fn is_zero(self) -> bool {
+        self.x == 0 && self.y == 0
+    }
 }
 
 impl From<(i32, i32)> for Coord {
@@ -691,6 +695,10 @@ impl Size {
 
     pub const fn max() -> Self {
         MAX_SIZE
+    }
+
+    pub fn is_zero(self) -> bool {
+        self.x == 0 && self.y == 0
     }
 }
 
