@@ -40,7 +40,7 @@ impl Axis {
 }
 
 pub trait StaticAxis: private::Sealed {
-    type Other;
+    type Other: StaticAxis;
     fn axis() -> Axis;
     fn new_coord(this_axis: i32, other_axis: i32) -> Coord;
     fn coord_get(coord: Coord) -> i32;
