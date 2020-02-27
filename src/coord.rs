@@ -601,6 +601,7 @@ impl Size {
         A::try_size_set_in_place(self, value)
     }
 
+    #[must_use]
     pub fn set_static<A: StaticAxis>(self, value: u32) -> Self {
         A::size_set(self, value)
     }
@@ -628,10 +629,12 @@ impl Size {
         self.try_set_static::<static_axis::Y>(height)
     }
 
+    #[must_use]
     pub fn set_width(self, width: u32) -> Self {
         self.set_static::<static_axis::X>(width)
     }
 
+    #[must_use]
     pub fn set_height(self, height: u32) -> Self {
         self.set_static::<static_axis::Y>(height)
     }
