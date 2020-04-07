@@ -266,6 +266,23 @@ impl Coord {
         let y = self.y as u32;
         x < size.x() && y < size.y()
     }
+    pub fn constrain(mut self, size: Size) -> Option<Self> {
+        if self.x < 0 {
+            self.x = 0;
+        }
+        if self.y < 0 {
+            self.y = 0;
+        }
+        let max_x = size.width().checked_sub(1)? as i32;
+        if self.x > max_x {
+            self.x = max_x;
+        }
+        let max_y = size.height().checked_sub(1)? as i32;
+        if self.y > max_y {
+            self.y = max_y;
+        }
+        Some(self)
+    }
     pub fn get(self, axis: Axis) -> i32 {
         match axis {
             Axis::X => self.x,
@@ -702,6 +719,10 @@ impl Size {
 
     pub fn is_zero(self) -> bool {
         self.x == 0 && self.y == 0
+    }
+
+    pub fn constrain(self, coord: Coord) -> Option<Coord> {
+        coord.constrain(self)
     }
 }
 
