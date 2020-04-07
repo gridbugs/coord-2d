@@ -721,6 +721,10 @@ impl Size {
         self.x == 0 && self.y == 0
     }
 
+    pub fn is_valid(self, coord: Coord) -> bool {
+        coord.is_valid(self)
+    }
+
     pub fn constrain(self, coord: Coord) -> Option<Coord> {
         coord.constrain(self)
     }
