@@ -673,21 +673,25 @@ impl Size {
     }
 
     /// Returns the width.
+    #[inline]
     pub const fn width(self) -> u32 {
         self.x
     }
 
     /// Alias for `width`.
+    #[inline]
     pub const fn x(self) -> u32 {
         self.x
     }
 
     /// Returns the height.
+    #[inline]
     pub const fn height(self) -> u32 {
         self.y
     }
 
     /// Alias for `height`.
+    #[inline]
     pub const fn y(self) -> u32 {
         self.y
     }
