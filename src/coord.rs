@@ -732,6 +732,10 @@ impl Size {
     pub fn constrain(self, coord: Coord) -> Option<Coord> {
         coord.constrain(self)
     }
+
+    pub fn coord_iter_row_major(self) -> CoordIterRowMajor {
+        CoordIterRowMajor::new(self)
+    }
 }
 
 impl From<(u32, u32)> for Size {
@@ -743,6 +747,36 @@ impl From<(u32, u32)> for Size {
 impl From<[u32; 2]> for Size {
     fn from(array: [u32; 2]) -> Self {
         Size::new(array[0], array[1])
+    }
+}
+
+pub struct CoordIterRowMajor {
+    coord: Coord,
+    size: Size,
+}
+
+impl CoordIterRowMajor {
+    pub fn new(size: Size) -> Self {
+        Self {
+            size,
+            coord: Coord { x: 0, y: 0 },
+        }
+    }
+}
+
+impl Iterator for CoordIterRowMajor {
+    type Item = Coord;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.coord.y == self.size.height() as i32 {
+            return None;
+        }
+        let coord = self.coord;
+        self.coord.x += 1;
+        if self.coord.x == self.size.width() as i32 {
+            self.coord.x = 0;
+            self.coord.y += 1;
+        }
+        Some(coord)
     }
 }
 
