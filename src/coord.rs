@@ -461,7 +461,7 @@ pub struct Size {
     y: u32,
 }
 
-pub const MAX_SIZE_FIELD: u32 = ::std::i32::MAX as u32 + 1;
+pub const MAX_SIZE_FIELD: u32 = ::core::i32::MAX as u32 + 1;
 
 pub const MAX_SIZE: Size = Size {
     x: MAX_SIZE_FIELD,
@@ -479,7 +479,7 @@ impl Size {
     }
 
     /// Creates a new `Size`.
-    /// Panics if `width` or `width` is greater than `::std::i32::MAX as u32 + 1`.
+    /// Panics if `width` or `width` is greater than `::core::i32::MAX as u32 + 1`.
     pub fn new(width: u32, height: u32) -> Self {
         match Self::try_new(width, height) {
             Err(DimensionTooLargeForSize) => {
@@ -505,7 +505,7 @@ impl Size {
     }
 
     pub fn to_coord(self) -> Result<Coord, DimensionTooLargeForCoord> {
-        if self.x > ::std::i32::MAX as u32 || self.y > ::std::i32::MAX as u32 {
+        if self.x > ::core::i32::MAX as u32 || self.y > ::core::i32::MAX as u32 {
             Err(DimensionTooLargeForCoord)
         } else {
             Ok(Coord::new(self.x as i32, self.y as i32))
