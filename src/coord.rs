@@ -438,6 +438,20 @@ impl Coord {
     pub fn is_zero(self) -> bool {
         self.x == 0 && self.y == 0
     }
+
+    pub fn pairwise_max(self, other: Self) -> Self {
+        Self {
+            x: self.x.max(other.x),
+            y: self.y.max(other.y),
+        }
+    }
+
+    pub fn pairwise_min(self, other: Self) -> Self {
+        Self {
+            x: self.x.min(other.x),
+            y: self.y.min(other.y),
+        }
+    }
 }
 
 impl From<(i32, i32)> for Coord {
@@ -735,6 +749,20 @@ impl Size {
 
     pub fn coord_iter_row_major(self) -> CoordIterRowMajor {
         CoordIterRowMajor::new(self)
+    }
+
+    pub fn pairwise_max(self, other: Self) -> Self {
+        Self {
+            x: self.x.max(other.x),
+            y: self.y.max(other.y),
+        }
+    }
+
+    pub fn pairwise_min(self, other: Self) -> Self {
+        Self {
+            x: self.x.min(other.x),
+            y: self.y.min(other.y),
+        }
     }
 }
 
