@@ -233,8 +233,8 @@ impl Coord {
     }
     #[cfg(feature = "rand")]
     pub fn random_within<R: rand::Rng>(size: Size, rng: &mut R) -> Self {
-        let x = rng.gen_range(0, size.width() as i32);
-        let y = rng.gen_range(0, size.height() as i32);
+        let x = rng.gen_range(0..size.width() as i32);
+        let y = rng.gen_range(0..size.height() as i32);
         Self { x, y }
     }
     pub fn to_size(self) -> Result<Size, NegativeDimension> {
