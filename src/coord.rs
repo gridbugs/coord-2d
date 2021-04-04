@@ -9,19 +9,19 @@ pub enum Axis {
 }
 
 impl Axis {
-    pub fn other(self) -> Self {
+    pub const fn other(self) -> Self {
         match self {
             Axis::X => Axis::Y,
             Axis::Y => Axis::X,
         }
     }
-    pub fn new_coord(self, this_axis: i32, other_axis: i32) -> Coord {
+    pub const fn new_coord(self, this_axis: i32, other_axis: i32) -> Coord {
         match self {
             Axis::X => Coord::new(this_axis, other_axis),
             Axis::Y => Coord::new(other_axis, this_axis),
         }
     }
-    pub fn try_new_size(
+    pub const fn try_new_size(
         self,
         this_axis: u32,
         other_axis: u32,
@@ -88,7 +88,7 @@ pub mod static_axis {
     pub struct Y;
 }
 
-fn check_size_limit(value: u32) -> Result<(), DimensionTooLargeForSize> {
+const fn check_size_limit(value: u32) -> Result<(), DimensionTooLargeForSize> {
     if value > MAX_SIZE_FIELD {
         Err(DimensionTooLargeForSize)
     } else {
@@ -228,7 +228,7 @@ impl Coord {
     pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
-    pub fn from_size(size: Size) -> Result<Self, DimensionTooLargeForCoord> {
+    pub const fn from_size(size: Size) -> Result<Self, DimensionTooLargeForCoord> {
         size.to_coord()
     }
     #[cfg(feature = "rand")]
@@ -244,7 +244,7 @@ impl Coord {
             Ok(Size::new(self.x as u32, self.y as u32))
         }
     }
-    fn normalize_part(value: i32, size: u32) -> i32 {
+    const fn normalize_part(value: i32, size: u32) -> i32 {
         let value = value % size as i32;
         if value < 0 {
             value + size as i32
@@ -252,13 +252,13 @@ impl Coord {
             value
         }
     }
-    pub fn normalize(self, size: Size) -> Self {
+    pub const fn normalize(self, size: Size) -> Self {
         Self {
             x: Self::normalize_part(self.x, size.x()),
             y: Self::normalize_part(self.y, size.y()),
         }
     }
-    pub fn is_valid(self, size: Size) -> bool {
+    pub const fn is_valid(self, size: Size) -> bool {
         if self.x < 0 || self.y < 0 {
             return false;
         }
@@ -266,24 +266,32 @@ impl Coord {
         let y = self.y as u32;
         x < size.x() && y < size.y()
     }
-    pub fn constrain(mut self, size: Size) -> Option<Self> {
+    pub const fn constrain(mut self, size: Size) -> Option<Self> {
         if self.x < 0 {
             self.x = 0;
         }
         if self.y < 0 {
             self.y = 0;
         }
-        let max_x = size.width().checked_sub(1)? as i32;
+        let max_x = if let Some(max_x) = size.width().checked_sub(1) {
+            max_x as i32
+        } else {
+            return None;
+        };
         if self.x > max_x {
             self.x = max_x;
         }
-        let max_y = size.height().checked_sub(1)? as i32;
+        let max_y = if let Some(max_y) = size.height().checked_sub(1) {
+            max_y as i32
+        } else {
+            return None;
+        };
         if self.y > max_y {
             self.y = max_y;
         }
         Some(self)
     }
-    pub fn get(self, axis: Axis) -> i32 {
+    pub const fn get(self, axis: Axis) -> i32 {
         match axis {
             Axis::X => self.x,
             Axis::Y => self.y,
@@ -307,7 +315,9 @@ impl Coord {
             },
         }
     }
-    pub fn set(self, axis: Axis, value: i32) -> Self {
+
+    #[must_use]
+    pub const fn set(self, axis: Axis, value: i32) -> Self {
         match axis {
             Axis::X => Self::new(value, self.y),
             Axis::Y => Self::new(self.x, value),
@@ -319,7 +329,7 @@ impl Coord {
             Axis::Y => self.y = value,
         }
     }
-    pub fn new_axis(this_axis: i32, other_axis: i32, axis: Axis) -> Self {
+    pub const fn new_axis(this_axis: i32, other_axis: i32, axis: Axis) -> Self {
         axis.new_coord(this_axis, other_axis)
     }
     pub fn get_static<A: StaticAxis>(self) -> i32 {
@@ -340,10 +350,12 @@ impl Coord {
     pub fn new_static_axis<A: StaticAxis>(this_axis: i32, other_axis: i32) -> Self {
         A::new_coord(this_axis, other_axis)
     }
-    pub fn set_x(self, x: i32) -> Self {
+    #[must_use]
+    pub const fn set_x(self, x: i32) -> Self {
         Self { x, ..self }
     }
-    pub fn set_y(self, y: i32) -> Self {
+    #[must_use]
+    pub const fn set_y(self, y: i32) -> Self {
         Self { y, ..self }
     }
     pub fn set_x_in_place(&mut self, x: i32) {
@@ -435,7 +447,7 @@ impl Coord {
         }
     }
 
-    pub fn is_zero(self) -> bool {
+    pub const fn is_zero(self) -> bool {
         self.x == 0 && self.y == 0
     }
 
@@ -483,9 +495,13 @@ pub const MAX_SIZE: Size = Size {
 };
 
 impl Size {
-    pub fn try_new(width: u32, height: u32) -> Result<Self, DimensionTooLargeForSize> {
-        check_size_limit(width)?;
-        check_size_limit(height)?;
+    pub const fn try_new(width: u32, height: u32) -> Result<Self, DimensionTooLargeForSize> {
+        if let Err(e) = check_size_limit(width) {
+            return Err(e);
+        }
+        if let Err(e) = check_size_limit(height) {
+            return Err(e);
+        }
         Ok(Self {
             x: width,
             y: height,
@@ -518,7 +534,7 @@ impl Size {
         coord.to_size()
     }
 
-    pub fn to_coord(self) -> Result<Coord, DimensionTooLargeForCoord> {
+    pub const fn to_coord(self) -> Result<Coord, DimensionTooLargeForCoord> {
         if self.x > ::core::i32::MAX as u32 || self.y > ::core::i32::MAX as u32 {
             Err(DimensionTooLargeForCoord)
         } else {
@@ -526,7 +542,7 @@ impl Size {
         }
     }
 
-    pub fn get(self, axis: Axis) -> u32 {
+    pub const fn get(self, axis: Axis) -> u32 {
         match axis {
             Axis::X => self.x,
             Axis::Y => self.y,
@@ -553,8 +569,10 @@ impl Size {
         }
     }
 
-    pub fn try_set(self, axis: Axis, value: u32) -> Result<Self, DimensionTooLargeForSize> {
-        check_size_limit(value)?;
+    pub const fn try_set(self, axis: Axis, value: u32) -> Result<Self, DimensionTooLargeForSize> {
+        if let Err(e) = check_size_limit(value) {
+            return Err(e);
+        }
         Ok(match axis {
             Axis::X => Self {
                 x: value,
@@ -567,6 +585,7 @@ impl Size {
         })
     }
 
+    #[must_use]
     pub fn set(self, axis: Axis, value: u32) -> Self {
         match self.try_set(axis, value) {
             Err(DimensionTooLargeForSize) => {
@@ -598,7 +617,7 @@ impl Size {
         }
     }
 
-    pub fn try_new_axis(
+    pub const fn try_new_axis(
         this_axis: u32,
         other_axis: u32,
         axis: Axis,
@@ -735,19 +754,19 @@ impl Size {
         MAX_SIZE
     }
 
-    pub fn is_zero(self) -> bool {
+    pub const fn is_zero(self) -> bool {
         self.x == 0 && self.y == 0
     }
 
-    pub fn is_valid(self, coord: Coord) -> bool {
+    pub const fn is_valid(self, coord: Coord) -> bool {
         coord.is_valid(self)
     }
 
-    pub fn constrain(self, coord: Coord) -> Option<Coord> {
+    pub const fn constrain(self, coord: Coord) -> Option<Coord> {
         coord.constrain(self)
     }
 
-    pub fn coord_iter_row_major(self) -> CoordIterRowMajor {
+    pub const fn coord_iter_row_major(self) -> CoordIterRowMajor {
         CoordIterRowMajor::new(self)
     }
 
@@ -784,7 +803,7 @@ pub struct CoordIterRowMajor {
 }
 
 impl CoordIterRowMajor {
-    pub fn new(size: Size) -> Self {
+    pub const fn new(size: Size) -> Self {
         Self {
             size,
             coord: Coord { x: 0, y: 0 },
