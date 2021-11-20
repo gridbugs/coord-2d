@@ -8,7 +8,7 @@ readme = "README.md"
 homepage = "https://github.com/gridbugs/coord-2d.git"
 repository = "https://github.com/gridbugs/coord-2d.git"
 documentation = "https://docs.rs/coord_2d"
-edition = "2018"
+edition = "2021"
 
 [features]
 serialize = ["serde"]
