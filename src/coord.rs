@@ -464,6 +464,13 @@ impl Coord {
             y: self.y.min(other.y),
         }
     }
+
+    pub const fn transpose(self) -> Self {
+        Self {
+            x: self.y,
+            y: self.x,
+        }
+    }
 }
 
 impl From<(i32, i32)> for Coord {
@@ -781,6 +788,13 @@ impl Size {
         Self {
             x: self.x.min(other.x),
             y: self.y.min(other.y),
+        }
+    }
+
+    pub const fn transpose(self) -> Self {
+        Self {
+            x: self.y,
+            y: self.x,
         }
     }
 }
