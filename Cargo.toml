@@ -12,6 +12,7 @@ edition = "2021"
 
 [features]
 serialize = ["serde"]
+std = []
 
 [dependencies]
 serde = { version = "1.0", features = ["serde_derive"], optional = true }

@@ -797,6 +797,32 @@ impl Size {
             y: self.x,
         }
     }
+
+    pub const fn is_empty(self) -> bool {
+        self.x == 0 || self.y == 0
+    }
+
+    pub const fn is_on_edge(self, Coord { x, y }: Coord) -> bool {
+        ((x == 0 || x == self.x as i32 - 1) && y >= 0 && y < self.y as i32)
+            || ((y == 0 || y == self.y as i32 - 1) && x >= 0 && x < self.x as i32)
+    }
+
+    pub fn edge_iter(self) -> impl Iterator<Item = Coord> {
+        if self.is_empty() {
+            None.into_iter().flatten()
+        } else {
+            let right_x = self.x as i32 - 1;
+            let bottom_y = self.y as i32 - 1;
+            let top = (0..self.x as i32).map(|x| Coord { x, y: 0 });
+            let right = (0..self.y as i32).map(move |y| Coord { x: right_x, y });
+            let bottom = (0..self.x as i32)
+                .rev()
+                .map(move |x| Coord { x, y: bottom_y });
+            let left = (0..self.y as i32).rev().map(|y| Coord { x: 0, y });
+            let all = top.chain(right).chain(bottom).chain(left);
+            Some(all).into_iter().flatten()
+        }
+    }
 }
 
 impl From<(u32, u32)> for Size {
@@ -871,5 +897,31 @@ mod test {
         assert_eq!(Coord::new(0, -1).cardinal_right135(), Coord::new(1, 1));
         assert_eq!(Coord::new(-1, 0).cardinal_left135(), Coord::new(1, 1));
         assert_eq!(Coord::new(-1, 0).cardinal_right135(), Coord::new(1, -1));
+    }
+
+    #[test]
+    fn edge() {
+        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 0)));
+        assert!(Size::new(3, 5).is_on_edge(Coord::new(2, 0)));
+        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 3)));
+        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 4)));
+        assert!(Size::new(3, 5).is_on_edge(Coord::new(1, 4)));
+        assert!(!Size::new(3, 5).is_on_edge(Coord::new(1, 5)));
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn edge_iter() {
+        use std::collections::HashSet;
+        fn test(size: Size) {
+            let brute_forced = size
+                .coord_iter_row_major()
+                .filter(|&c| size.is_on_edge(c))
+                .collect::<HashSet<_>>();
+            let via_iter = size.edge_iter().collect::<HashSet<_>>();
+            assert_eq!(brute_forced, via_iter);
+        }
+        test(Size::new(3, 5));
+        test(Size::new(0, 0));
     }
 }
