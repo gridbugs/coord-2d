@@ -807,23 +807,101 @@ impl Size {
             || ((y == 0 || y == self.y as i32 - 1) && x >= 0 && x < self.x as i32)
     }
 
-    pub fn edge_iter(self) -> impl Iterator<Item = Coord> {
-        if self.is_empty() {
-            None.into_iter().flatten()
+    pub fn edge_iter(self) -> EdgeIter {
+        edge_iter::make_iter(self)
+    }
+}
+
+mod edge_iter {
+    use super::{Coord, Size};
+    use core::{
+        iter::{Chain, Flatten, Rev},
+        ops::Range,
+    };
+
+    struct Top {
+        x_range: Range<i32>,
+    }
+
+    impl Iterator for Top {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.x_range.next().map(|x| Coord { x, y: 0 })
+        }
+    }
+
+    struct Right {
+        y_range: Range<i32>,
+        x: i32,
+    }
+
+    impl Iterator for Right {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.y_range.next().map(|y| Coord { x: self.x, y })
+        }
+    }
+
+    struct Bottom {
+        x_range: Rev<Range<i32>>,
+        y: i32,
+    }
+
+    impl Iterator for Bottom {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.x_range.next().map(|x| Coord { x, y: self.y })
+        }
+    }
+
+    struct Left {
+        y_range: Rev<Range<i32>>,
+    }
+
+    impl Iterator for Left {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.y_range.next().map(|y| Coord { x: 0, y })
+        }
+    }
+
+    type NonEmpty = Chain<Chain<Chain<Top, Right>, Bottom>, Left>;
+
+    type Optional = Flatten<core::option::IntoIter<NonEmpty>>;
+
+    pub struct Iter(Optional);
+
+    impl Iterator for Iter {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            self.0.next()
+        }
+    }
+
+    pub fn make_iter(size: Size) -> Iter {
+        if size.is_empty() {
+            Iter(None.into_iter().flatten())
         } else {
-            let right_x = self.x as i32 - 1;
-            let bottom_y = self.y as i32 - 1;
-            let top = (0..self.x as i32).map(|x| Coord { x, y: 0 });
-            let right = (0..self.y as i32).map(move |y| Coord { x: right_x, y });
-            let bottom = (0..self.x as i32)
-                .rev()
-                .map(move |x| Coord { x, y: bottom_y });
-            let left = (0..self.y as i32).rev().map(|y| Coord { x: 0, y });
+            let top = Top {
+                x_range: 0..size.width() as i32,
+            };
+            let right = Right {
+                y_range: 0..size.height() as i32,
+                x: size.width() as i32 - 1,
+            };
+            let bottom = Bottom {
+                x_range: (0..size.width() as i32).rev(),
+                y: size.height() as i32 - 1,
+            };
+            let left = Left {
+                y_range: (0..size.height() as i32).rev(),
+            };
             let all = top.chain(right).chain(bottom).chain(left);
-            Some(all).into_iter().flatten()
+            Iter(Some(all).into_iter().flatten())
         }
     }
 }
+pub use edge_iter::Iter as EdgeIter;
 
 impl From<(u32, u32)> for Size {
     fn from((x, y): (u32, u32)) -> Self {
