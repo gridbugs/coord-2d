@@ -813,9 +813,9 @@ impl Size {
 }
 
 mod edge_iter {
-    use super::{Coord, Size};
+    use super::{Coord, CoordIterRowMajor, Size};
     use core::{
-        iter::{Chain, Flatten, Rev},
+        iter::{Chain, Rev},
         ops::Range,
     };
 
@@ -865,11 +865,26 @@ mod edge_iter {
         }
     }
 
-    type NonEmpty = Chain<Chain<Chain<Top, Right>, Bottom>, Left>;
+    type TwoDimensional = Chain<Chain<Chain<Top, Right>, Bottom>, Left>;
 
-    type Optional = Flatten<core::option::IntoIter<NonEmpty>>;
+    enum IterPrivate {
+        ZeroDimensional,
+        OneDimensional(CoordIterRowMajor),
+        TwoDimensional(TwoDimensional),
+    }
 
-    pub struct Iter(Optional);
+    impl Iterator for IterPrivate {
+        type Item = Coord;
+        fn next(&mut self) -> Option<Self::Item> {
+            match self {
+                Self::ZeroDimensional => None,
+                Self::OneDimensional(iter) => iter.next(),
+                Self::TwoDimensional(iter) => iter.next(),
+            }
+        }
+    }
+
+    pub struct Iter(IterPrivate);
 
     impl Iterator for Iter {
         type Item = Coord;
@@ -879,26 +894,29 @@ mod edge_iter {
     }
 
     pub fn make_iter(size: Size) -> Iter {
-        if size.is_empty() {
-            Iter(None.into_iter().flatten())
+        let iter_private = if size.is_empty() {
+            IterPrivate::ZeroDimensional
+        } else if size.width() == 1 || size.height() == 1 {
+            IterPrivate::OneDimensional(size.coord_iter_row_major())
         } else {
             let top = Top {
-                x_range: 0..size.width() as i32,
+                x_range: 0..size.width() as i32 - 1,
             };
             let right = Right {
-                y_range: 0..size.height() as i32,
+                y_range: 0..size.height() as i32 - 1,
                 x: size.width() as i32 - 1,
             };
             let bottom = Bottom {
-                x_range: (0..size.width() as i32).rev(),
+                x_range: (1..size.width() as i32).rev(),
                 y: size.height() as i32 - 1,
             };
             let left = Left {
-                y_range: (0..size.height() as i32).rev(),
+                y_range: (1..size.height() as i32).rev(),
             };
             let all = top.chain(right).chain(bottom).chain(left);
-            Iter(Some(all).into_iter().flatten())
-        }
+            IterPrivate::TwoDimensional(all)
+        };
+        Iter(iter_private)
     }
 }
 pub use edge_iter::Iter as EdgeIter;
@@ -990,16 +1008,24 @@ mod test {
     #[test]
     #[cfg(feature = "std")]
     fn edge_iter() {
-        use std::collections::HashSet;
+        use std::collections::BTreeSet;
         fn test(size: Size) {
             let brute_forced = size
                 .coord_iter_row_major()
                 .filter(|&c| size.is_on_edge(c))
-                .collect::<HashSet<_>>();
-            let via_iter = size.edge_iter().collect::<HashSet<_>>();
-            assert_eq!(brute_forced, via_iter);
+                .collect::<Vec<_>>();
+            let via_iter = size.edge_iter().collect::<Vec<_>>();
+            assert_eq!(brute_forced.len(), via_iter.len());
+            assert_eq!(
+                brute_forced.iter().cloned().collect::<BTreeSet<_>>(),
+                via_iter.iter().cloned().collect::<BTreeSet<_>>(),
+            );
         }
-        test(Size::new(3, 5));
         test(Size::new(0, 0));
+        test(Size::new(1, 1));
+        test(Size::new(1, 3));
+        test(Size::new(3, 1));
+        test(Size::new(2, 2));
+        test(Size::new(3, 5));
     }
 }
