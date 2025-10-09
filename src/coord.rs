@@ -479,9 +479,21 @@ impl From<(i32, i32)> for Coord {
     }
 }
 
+impl From<Coord> for (i32, i32) {
+    fn from(Coord { x, y }: Coord) -> Self {
+        (x, y)
+    }
+}
+
 impl From<[i32; 2]> for Coord {
     fn from(array: [i32; 2]) -> Self {
         Coord::new(array[0], array[1])
+    }
+}
+
+impl From<Coord> for [i32; 2] {
+    fn from(Coord { x, y }: Coord) -> Self {
+        [x, y]
     }
 }
 
