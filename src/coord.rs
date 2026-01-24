@@ -15,26 +15,16 @@ impl Axis {
             Axis::Y => Axis::X,
         }
     }
-    pub const fn new_coord(self, this_axis: i32, other_axis: i32) -> Coord {
+    pub const fn new_icoord(self, this_axis: i32, other_axis: i32) -> ICoord {
         match self {
-            Axis::X => Coord::new(this_axis, other_axis),
-            Axis::Y => Coord::new(other_axis, this_axis),
+            Axis::X => ICoord::new(this_axis, other_axis),
+            Axis::Y => ICoord::new(other_axis, this_axis),
         }
     }
-    pub const fn try_new_size(
-        self,
-        this_axis: u32,
-        other_axis: u32,
-    ) -> Result<Size, DimensionTooLargeForSize> {
+    pub fn new_ucoord(self, this_axis: u32, other_axis: u32) -> UCoord {
         match self {
-            Axis::X => Size::try_new(this_axis, other_axis),
-            Axis::Y => Size::try_new(other_axis, this_axis),
-        }
-    }
-    pub fn new_size(self, this_axis: u32, other_axis: u32) -> Size {
-        match self {
-            Axis::X => Size::new(this_axis, other_axis),
-            Axis::Y => Size::new(other_axis, this_axis),
+            Axis::X => UCoord::new(this_axis, other_axis),
+            Axis::Y => UCoord::new(other_axis, this_axis),
         }
     }
 }
@@ -42,45 +32,17 @@ impl Axis {
 pub trait StaticAxis: private::Sealed {
     type Other: StaticAxis;
     fn axis() -> Axis;
-    fn new_coord(this_axis: i32, other_axis: i32) -> Coord;
-    fn coord_get(coord: Coord) -> i32;
-    fn coord_get_mut(coord: &mut Coord) -> &mut i32;
-    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, f: F) -> Coord;
-    fn coord_set(coord: Coord, value: i32) -> Coord;
-    fn coord_set_in_place(coord: &mut Coord, value: i32);
-    fn try_new_size(this_axis: u32, other_axis: u32) -> Result<Size, DimensionTooLargeForSize>;
-    fn size_get(size: Size) -> u32;
-    fn size_get_mut(size: &mut Size) -> &mut u32;
-    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, f: F) -> Size;
-    fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize>;
-    fn try_size_set_in_place(size: &mut Size, value: u32) -> Result<(), DimensionTooLargeForSize>;
-    fn size_set(size: Size, value: u32) -> Size {
-        match Self::try_size_set(size, value) {
-            Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
-            }
-            Ok(size) => size,
-        }
-    }
-    fn size_set_in_place(size: &mut Size, value: u32) {
-        match Self::try_size_set_in_place(size, value) {
-            Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
-            }
-            Ok(()) => (),
-        }
-    }
-    fn new_size(this_axis: u32, other_axis: u32) -> Size {
-        match Self::try_new_size(this_axis, other_axis) {
-            Err(DimensionTooLargeForSize) => {
-                panic!(
-                    "Size is too big: ({}, {}). Max is {}.",
-                    this_axis, other_axis, MAX_SIZE_FIELD
-                );
-            }
-            Ok(size) => size,
-        }
-    }
+    fn new_icoord(this_axis: i32, other_axis: i32) -> ICoord;
+    fn icoord_get(icoord: ICoord) -> i32;
+    fn icoord_get_mut(icoord: &mut ICoord) -> &mut i32;
+    fn icoord_with_axis<F: FnMut(i32) -> i32>(icoord: ICoord, f: F) -> ICoord;
+    fn icoord_set(icoord: ICoord, value: i32) -> ICoord;
+    fn icoord_set_in_place(icoord: &mut ICoord, value: i32);
+    fn ucoord_get(ucoord: UCoord) -> u32;
+    fn ucoord_with_axis<F: FnMut(u32) -> u32>(ucoord: UCoord, f: F) -> UCoord;
+    fn ucoord_set(ucoord: UCoord, value: u32) -> UCoord;
+    fn ucoord_set_in_place(ucoord: &mut UCoord, value: u32);
+    fn new_ucoord(this_axis: u32, other_axis: u32) -> UCoord;
 }
 
 pub mod static_axis {
@@ -88,12 +50,12 @@ pub mod static_axis {
     pub struct Y;
 }
 
-const fn check_size_limit(value: u32) -> Result<(), DimensionTooLargeForSize> {
-    if value > MAX_SIZE_FIELD {
-        Err(DimensionTooLargeForSize)
-    } else {
-        Ok(())
-    }
+fn check_ucoord_limit(value: u32) {
+    assert!(
+        value <= MAX_UCOORD_FIELD,
+        "Value {} is too large for ucoord field",
+        value
+    );
 }
 
 impl StaticAxis for static_axis::X {
@@ -101,50 +63,41 @@ impl StaticAxis for static_axis::X {
     fn axis() -> Axis {
         Axis::X
     }
-    fn new_coord(this_axis: i32, other_axis: i32) -> Coord {
-        Coord::new(this_axis, other_axis)
+    fn new_icoord(this_axis: i32, other_axis: i32) -> ICoord {
+        ICoord::new(this_axis, other_axis)
     }
-    fn coord_get(coord: Coord) -> i32 {
-        coord.x
+    fn icoord_get(icoord: ICoord) -> i32 {
+        icoord.x
     }
-    fn coord_get_mut(coord: &mut Coord) -> &mut i32 {
-        &mut coord.x
+    fn icoord_get_mut(icoord: &mut ICoord) -> &mut i32 {
+        &mut icoord.x
     }
-    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, mut f: F) -> Coord {
-        Coord {
-            x: f(coord.x),
-            ..coord
+    fn icoord_with_axis<F: FnMut(i32) -> i32>(icoord: ICoord, mut f: F) -> ICoord {
+        ICoord {
+            x: f(icoord.x),
+            ..icoord
         }
     }
-    fn coord_set(coord: Coord, value: i32) -> Coord {
-        Coord { x: value, ..coord }
+    fn icoord_set(icoord: ICoord, value: i32) -> ICoord {
+        ICoord { x: value, ..icoord }
     }
-    fn coord_set_in_place(coord: &mut Coord, value: i32) {
-        coord.x = value
+    fn icoord_set_in_place(icoord: &mut ICoord, value: i32) {
+        icoord.x = value
     }
-    fn try_new_size(this_axis: u32, other_axis: u32) -> Result<Size, DimensionTooLargeForSize> {
-        Size::try_new(this_axis, other_axis)
+    fn ucoord_get(ucoord: UCoord) -> u32 {
+        ucoord.width()
     }
-    fn size_get(size: Size) -> u32 {
-        size.x
+    fn ucoord_with_axis<F: FnMut(u32) -> u32>(ucoord: UCoord, mut f: F) -> UCoord {
+        ucoord.set_width(f(ucoord.width()))
     }
-    fn size_get_mut(size: &mut Size) -> &mut u32 {
-        &mut size.x
+    fn ucoord_set(ucoord: UCoord, value: u32) -> UCoord {
+        ucoord.set_width(value)
     }
-    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, mut f: F) -> Size {
-        Size {
-            x: f(size.x),
-            ..size
-        }
+    fn ucoord_set_in_place(ucoord: &mut UCoord, value: u32) {
+        ucoord.set_width_in_place(value);
     }
-    fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize> {
-        check_size_limit(value)?;
-        Ok(Size { x: value, ..size })
-    }
-    fn try_size_set_in_place(size: &mut Size, value: u32) -> Result<(), DimensionTooLargeForSize> {
-        check_size_limit(value)?;
-        size.x = value;
-        Ok(())
+    fn new_ucoord(this_axis: u32, other_axis: u32) -> UCoord {
+        UCoord::new(this_axis, other_axis)
     }
 }
 
@@ -153,50 +106,43 @@ impl StaticAxis for static_axis::Y {
     fn axis() -> Axis {
         Axis::Y
     }
-    fn new_coord(this_axis: i32, other_axis: i32) -> Coord {
-        Coord::new(other_axis, this_axis)
+    fn new_icoord(this_axis: i32, other_axis: i32) -> ICoord {
+        ICoord::new(other_axis, this_axis)
     }
-    fn coord_get(coord: Coord) -> i32 {
-        coord.y
+    fn icoord_get(icoord: ICoord) -> i32 {
+        icoord.y
     }
-    fn coord_get_mut(coord: &mut Coord) -> &mut i32 {
-        &mut coord.y
+    fn icoord_get_mut(icoord: &mut ICoord) -> &mut i32 {
+        &mut icoord.y
     }
-    fn coord_with_axis<F: FnMut(i32) -> i32>(coord: Coord, mut f: F) -> Coord {
-        Coord {
-            y: f(coord.y),
-            ..coord
+    fn icoord_with_axis<F: FnMut(i32) -> i32>(icoord: ICoord, mut f: F) -> ICoord {
+        ICoord {
+            y: f(icoord.y),
+            ..icoord
         }
     }
-    fn coord_set(coord: Coord, value: i32) -> Coord {
-        Coord { y: value, ..coord }
+    fn icoord_set(icoord: ICoord, value: i32) -> ICoord {
+        ICoord { y: value, ..icoord }
     }
-    fn coord_set_in_place(coord: &mut Coord, value: i32) {
-        coord.y = value
+    fn icoord_set_in_place(icoord: &mut ICoord, value: i32) {
+        icoord.y = value
     }
-    fn size_get(size: Size) -> u32 {
-        size.y
+    fn ucoord_get(ucoord: UCoord) -> u32 {
+        ucoord.height()
     }
-    fn size_get_mut(size: &mut Size) -> &mut u32 {
-        &mut size.y
+    fn ucoord_with_axis<F: FnMut(u32) -> u32>(ucoord: UCoord, mut f: F) -> UCoord {
+        ucoord.set_height(f(ucoord.height()))
     }
-    fn size_with_axis<F: FnMut(u32) -> u32>(size: Size, mut f: F) -> Size {
-        Size {
-            y: f(size.y),
-            ..size
-        }
+    fn ucoord_set(ucoord: UCoord, value: u32) -> UCoord {
+        ucoord.set_height(value)
     }
-    fn try_size_set(size: Size, value: u32) -> Result<Size, DimensionTooLargeForSize> {
-        check_size_limit(value)?;
-        Ok(Size { y: value, ..size })
+
+    fn ucoord_set_in_place(ucoord: &mut UCoord, value: u32) {
+        ucoord.set_height_in_place(value);
     }
-    fn try_size_set_in_place(size: &mut Size, value: u32) -> Result<(), DimensionTooLargeForSize> {
-        check_size_limit(value)?;
-        size.y = value;
-        Ok(())
-    }
-    fn try_new_size(this_axis: u32, other_axis: u32) -> Result<Size, DimensionTooLargeForSize> {
-        Size::try_new(other_axis, this_axis)
+
+    fn new_ucoord(this_axis: u32, other_axis: u32) -> UCoord {
+        UCoord::new(other_axis, this_axis)
     }
 }
 
@@ -207,73 +153,80 @@ mod private {
     impl Sealed for super::static_axis::Y {}
 }
 
-/// General purpose coordinate
+/// General purpose icoordinate
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default, PartialOrd, Ord)]
-pub struct Coord {
+pub struct ICoord {
     pub x: i32,
     pub y: i32,
+}
+
+impl core::fmt::Display for ICoord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
 }
 
 #[derive(Debug)]
 pub struct NegativeDimension;
 
 #[derive(Debug)]
-pub struct DimensionTooLargeForSize;
+pub struct DimensionTooLargeForUCoord;
 
 #[derive(Debug)]
-pub struct DimensionTooLargeForCoord;
+pub struct DimensionTooLargeForICoord;
 
-impl Coord {
+impl ICoord {
     pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
-    pub const fn from_size(size: Size) -> Result<Self, DimensionTooLargeForCoord> {
-        size.to_coord()
+    pub const fn from_ucoord(ucoord: UCoord) -> Self {
+        ucoord.to_icoord()
     }
     #[cfg(feature = "rand")]
-    pub fn random_within<R: rand::Rng>(size: Size, rng: &mut R) -> Self {
-        let x = rng.gen_range(0..size.width() as i32);
-        let y = rng.gen_range(0..size.height() as i32);
+    pub fn random_within<R: rand::Rng>(ucoord: UCoord, rng: &mut R) -> Self {
+        let x = rng.gen_range(0..ucoord.width() as i32);
+        let y = rng.gen_range(0..ucoord.height() as i32);
         Self { x, y }
     }
-    pub fn to_size(self) -> Result<Size, NegativeDimension> {
-        if self.x < 0 || self.y < 0 {
-            Err(NegativeDimension)
-        } else {
-            Ok(Size::new(self.x as u32, self.y as u32))
-        }
+    pub fn to_ucoord(self) -> UCoord {
+        assert!(
+            self.x >= 0 && self.y >= 0,
+            "ICoord {} can't be converted to UCoord as it contains a negative component.",
+            self
+        );
+        UCoord(self)
     }
-    const fn normalize_part(value: i32, size: u32) -> i32 {
-        let value = value % size as i32;
+    const fn normalize_part(value: i32, ucoord: u32) -> i32 {
+        let value = value % ucoord as i32;
         if value < 0 {
-            value + size as i32
+            value + ucoord as i32
         } else {
             value
         }
     }
-    pub const fn normalize(self, size: Size) -> Self {
+    pub const fn normalize(self, ucoord: UCoord) -> Self {
         Self {
-            x: Self::normalize_part(self.x, size.x()),
-            y: Self::normalize_part(self.y, size.y()),
+            x: Self::normalize_part(self.x, ucoord.width()),
+            y: Self::normalize_part(self.y, ucoord.height()),
         }
     }
-    pub const fn is_valid(self, size: Size) -> bool {
+    pub const fn is_valid(self, ucoord: UCoord) -> bool {
         if self.x < 0 || self.y < 0 {
             return false;
         }
         let x = self.x as u32;
         let y = self.y as u32;
-        x < size.x() && y < size.y()
+        x < ucoord.width() && y < ucoord.height()
     }
-    pub const fn constrain(mut self, size: Size) -> Option<Self> {
+    pub const fn constrain(mut self, ucoord: UCoord) -> Option<Self> {
         if self.x < 0 {
             self.x = 0;
         }
         if self.y < 0 {
             self.y = 0;
         }
-        let max_x = if let Some(max_x) = size.width().checked_sub(1) {
+        let max_x = if let Some(max_x) = ucoord.width().checked_sub(1) {
             max_x as i32
         } else {
             return None;
@@ -281,7 +234,7 @@ impl Coord {
         if self.x > max_x {
             self.x = max_x;
         }
-        let max_y = if let Some(max_y) = size.height().checked_sub(1) {
+        let max_y = if let Some(max_y) = ucoord.height().checked_sub(1) {
             max_y as i32
         } else {
             return None;
@@ -330,25 +283,25 @@ impl Coord {
         }
     }
     pub const fn new_axis(this_axis: i32, other_axis: i32, axis: Axis) -> Self {
-        axis.new_coord(this_axis, other_axis)
+        axis.new_icoord(this_axis, other_axis)
     }
     pub fn get_static<A: StaticAxis>(self) -> i32 {
-        A::coord_get(self)
+        A::icoord_get(self)
     }
     pub fn get_static_mut<A: StaticAxis>(&mut self) -> &mut i32 {
-        A::coord_get_mut(self)
+        A::icoord_get_mut(self)
     }
     pub fn with_static_axis<A: StaticAxis, F: FnMut(i32) -> i32>(self, f: F) -> Self {
-        A::coord_with_axis(self, f)
+        A::icoord_with_axis(self, f)
     }
     pub fn set_static<A: StaticAxis>(self, value: i32) -> Self {
-        A::coord_set(self, value)
+        A::icoord_set(self, value)
     }
     pub fn set_static_in_place<A: StaticAxis>(&mut self, value: i32) {
-        A::coord_set_in_place(self, value)
+        A::icoord_set_in_place(self, value)
     }
     pub fn new_static_axis<A: StaticAxis>(this_axis: i32, other_axis: i32) -> Self {
-        A::new_coord(this_axis, other_axis)
+        A::new_icoord(this_axis, other_axis)
     }
     #[must_use]
     pub const fn set_x(self, x: i32) -> Self {
@@ -473,350 +426,238 @@ impl Coord {
     }
 }
 
-impl From<(i32, i32)> for Coord {
+impl From<(i32, i32)> for ICoord {
     fn from((x, y): (i32, i32)) -> Self {
-        Coord::new(x, y)
+        ICoord::new(x, y)
     }
 }
 
-impl From<Coord> for (i32, i32) {
-    fn from(Coord { x, y }: Coord) -> Self {
+impl From<ICoord> for (i32, i32) {
+    fn from(ICoord { x, y }: ICoord) -> Self {
         (x, y)
     }
 }
 
-impl From<[i32; 2]> for Coord {
+impl From<[i32; 2]> for ICoord {
     fn from(array: [i32; 2]) -> Self {
-        Coord::new(array[0], array[1])
+        ICoord::new(array[0], array[1])
     }
 }
 
-impl From<Coord> for [i32; 2] {
-    fn from(Coord { x, y }: Coord) -> Self {
+impl From<ICoord> for [i32; 2] {
+    fn from(ICoord { x, y }: ICoord) -> Self {
         [x, y]
     }
 }
 
-/// A size cannot be created which would contain un-addressable cells.
-/// That is, the maximum size has a width and height of one greater than the maximum `i32`.
+// Internally a UCoord is an ICoord, but we prevent UCoords from being created with negative
+// dimensions.
 #[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Default, PartialOrd, Ord)]
-pub struct Size {
-    x: u32,
-    y: u32,
-}
+pub struct UCoord(ICoord);
 
-pub const MAX_SIZE_FIELD: u32 = ::core::i32::MAX as u32 + 1;
+pub const MAX_UCOORD_FIELD: u32 = ::core::i32::MAX as u32;
 
-pub const MAX_SIZE: Size = Size {
-    x: MAX_SIZE_FIELD,
-    y: MAX_SIZE_FIELD,
-};
+pub const MAX_UCOORD: UCoord = UCoord(ICoord {
+    x: MAX_UCOORD_FIELD as i32,
+    y: MAX_UCOORD_FIELD as i32,
+});
 
-impl Size {
-    pub const fn try_new(width: u32, height: u32) -> Result<Self, DimensionTooLargeForSize> {
-        if let Err(e) = check_size_limit(width) {
-            return Err(e);
-        }
-        if let Err(e) = check_size_limit(height) {
-            return Err(e);
-        }
-        Ok(Self {
-            x: width,
-            y: height,
+impl UCoord {
+    const fn new_unchecked(width: u32, height: u32) -> Self {
+        Self(ICoord {
+            x: width as i32,
+            y: height as i32,
         })
     }
 
-    /// Creates a new `Size`.
-    /// Panics if `width` or `width` is greater than `::core::i32::MAX as u32 + 1`.
+    /// Creates a new `UCoord`.
+    /// Panics if `width` or `height` is greater than `::core::i32::MAX`.
     pub fn new(width: u32, height: u32) -> Self {
-        match Self::try_new(width, height) {
-            Err(DimensionTooLargeForSize) => {
-                panic!(
-                    "Size is too big: ({}, {}). Max is {}.",
-                    width, width, MAX_SIZE_FIELD
-                );
-            }
-            Ok(size) => size,
-        }
+        check_ucoord_limit(width);
+        check_ucoord_limit(height);
+        Self::new_unchecked(width, height)
     }
 
-    /// Like new, but const and never panics as it's impossible to construct an invalid size
+    /// Like new, but const and never panics as it's impossible to construct an invalid ucoord
     pub const fn new_u16(width: u16, height: u16) -> Self {
-        Self {
-            x: width as u32,
-            y: height as u32,
-        }
+        Self(ICoord {
+            x: width as i32,
+            y: height as i32,
+        })
     }
 
-    pub fn from_coord(coord: Coord) -> Result<Self, NegativeDimension> {
-        coord.to_size()
+    pub fn from_icoord(icoord: ICoord) -> Self {
+        icoord.to_ucoord()
     }
 
-    pub const fn to_coord(self) -> Result<Coord, DimensionTooLargeForCoord> {
-        if self.x > ::core::i32::MAX as u32 || self.y > ::core::i32::MAX as u32 {
-            Err(DimensionTooLargeForCoord)
-        } else {
-            Ok(Coord::new(self.x as i32, self.y as i32))
-        }
+    pub const fn to_icoord(self) -> ICoord {
+        self.0
     }
 
     pub const fn get(self, axis: Axis) -> u32 {
         match axis {
-            Axis::X => self.x,
-            Axis::Y => self.y,
-        }
-    }
-
-    pub fn get_mut(&mut self, axis: Axis) -> &mut u32 {
-        match axis {
-            Axis::X => &mut self.x,
-            Axis::Y => &mut self.y,
+            Axis::X => self.width(),
+            Axis::Y => self.height(),
         }
     }
 
     pub fn with_axis<F: FnMut(u32) -> u32>(self, axis: Axis, mut f: F) -> Self {
         match axis {
-            Axis::X => Self {
-                x: f(self.x),
-                ..self
-            },
-            Axis::Y => Self {
-                y: f(self.y),
-                ..self
-            },
+            Axis::X => self.set_width(f(self.width())),
+            Axis::Y => self.set_height(f(self.height())),
         }
-    }
-
-    pub const fn try_set(self, axis: Axis, value: u32) -> Result<Self, DimensionTooLargeForSize> {
-        if let Err(e) = check_size_limit(value) {
-            return Err(e);
-        }
-        Ok(match axis {
-            Axis::X => Self {
-                x: value,
-                y: self.y,
-            },
-            Axis::Y => Self {
-                x: self.x,
-                y: value,
-            },
-        })
     }
 
     #[must_use]
     pub fn set(self, axis: Axis, value: u32) -> Self {
-        match self.try_set(axis, value) {
-            Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
-            }
-            Ok(size) => size,
-        }
-    }
-
-    pub fn try_set_in_place(
-        &mut self,
-        axis: Axis,
-        value: u32,
-    ) -> Result<(), DimensionTooLargeForSize> {
-        check_size_limit(value)?;
+        check_ucoord_limit(value);
         match axis {
-            Axis::X => self.x = value,
-            Axis::Y => self.y = value,
+            Axis::X => self.set_width(value),
+            Axis::Y => self.set_height(value),
         }
-        Ok(())
     }
 
     pub fn set_in_place(&mut self, axis: Axis, value: u32) {
-        match self.try_set_in_place(axis, value) {
-            Err(DimensionTooLargeForSize) => {
-                panic!("Value is too big: {}. Max is {}.", value, MAX_SIZE_FIELD);
-            }
-            Ok(()) => (),
+        check_ucoord_limit(value);
+        match axis {
+            Axis::X => self.set_width_in_place(value),
+            Axis::Y => self.set_height_in_place(value),
         }
     }
 
-    pub const fn try_new_axis(
-        this_axis: u32,
-        other_axis: u32,
-        axis: Axis,
-    ) -> Result<Self, DimensionTooLargeForSize> {
-        axis.try_new_size(this_axis, other_axis)
-    }
-
     pub fn new_axis(this_axis: u32, other_axis: u32, axis: Axis) -> Self {
-        axis.new_size(this_axis, other_axis)
+        let (width, height) = match axis {
+            Axis::X => (this_axis, other_axis),
+            Axis::Y => (other_axis, this_axis),
+        };
+        Self::new(width, height)
     }
 
     pub fn get_static<A: StaticAxis>(self) -> u32 {
-        A::size_get(self)
-    }
-    pub fn get_static_mut<A: StaticAxis>(&mut self) -> &mut u32 {
-        A::size_get_mut(self)
+        A::ucoord_get(self)
     }
     pub fn with_static_axis<A: StaticAxis, F: FnMut(u32) -> u32>(self, f: F) -> Self {
-        A::size_with_axis(self, f)
-    }
-    pub fn try_set_static<A: StaticAxis>(
-        self,
-        value: u32,
-    ) -> Result<Self, DimensionTooLargeForSize> {
-        A::try_size_set(self, value)
-    }
-    pub fn try_set_static_in_place<A: StaticAxis>(
-        &mut self,
-        value: u32,
-    ) -> Result<(), DimensionTooLargeForSize> {
-        A::try_size_set_in_place(self, value)
+        A::ucoord_with_axis(self, f)
     }
 
     #[must_use]
     pub fn set_static<A: StaticAxis>(self, value: u32) -> Self {
-        A::size_set(self, value)
+        A::ucoord_set(self, value)
     }
 
     pub fn set_static_in_place<A: StaticAxis>(&mut self, value: u32) {
-        A::size_set_in_place(self, value)
-    }
-
-    pub fn try_new_static_axis<A: StaticAxis>(
-        this_axis: u32,
-        other_axis: u32,
-    ) -> Result<Self, DimensionTooLargeForSize> {
-        A::try_new_size(this_axis, other_axis)
+        A::ucoord_set_in_place(self, value)
     }
 
     pub fn new_static_axis<A: StaticAxis>(this_axis: u32, other_axis: u32) -> Self {
-        A::new_size(this_axis, other_axis)
-    }
-
-    pub fn try_set_width(self, width: u32) -> Result<Self, DimensionTooLargeForSize> {
-        self.try_set_static::<static_axis::X>(width)
-    }
-
-    pub fn try_set_height(self, height: u32) -> Result<Self, DimensionTooLargeForSize> {
-        self.try_set_static::<static_axis::Y>(height)
+        A::new_ucoord(this_axis, other_axis)
     }
 
     #[must_use]
-    pub fn set_width(self, width: u32) -> Self {
-        self.set_static::<static_axis::X>(width)
+    pub fn set_width(mut self, width: u32) -> Self {
+        check_ucoord_limit(width);
+        self.0.x = width as i32;
+        self
     }
 
     #[must_use]
-    pub fn set_height(self, height: u32) -> Self {
-        self.set_static::<static_axis::Y>(height)
-    }
-
-    pub fn try_set_width_in_place(&mut self, width: u32) -> Result<(), DimensionTooLargeForSize> {
-        self.try_set_static_in_place::<static_axis::X>(width)
-    }
-
-    pub fn try_set_height_in_place(&mut self, height: u32) -> Result<(), DimensionTooLargeForSize> {
-        self.try_set_static_in_place::<static_axis::Y>(height)
+    pub fn set_height(mut self, height: u32) -> Self {
+        check_ucoord_limit(height);
+        self.0.y = height as i32;
+        self
     }
 
     pub fn set_width_in_place(&mut self, width: u32) {
-        self.set_static_in_place::<static_axis::X>(width)
+        check_ucoord_limit(width);
+        self.0.x = width as i32;
     }
 
     pub fn set_height_in_place(&mut self, height: u32) {
-        self.set_static_in_place::<static_axis::Y>(height)
+        check_ucoord_limit(height);
+        self.0.y = height as i32;
     }
 
     /// Returns the width.
     #[inline]
     pub const fn width(self) -> u32 {
-        self.x
-    }
-
-    /// Alias for `width`.
-    #[inline]
-    pub const fn x(self) -> u32 {
-        self.x
+        self.0.x as u32
     }
 
     /// Returns the height.
     #[inline]
     pub const fn height(self) -> u32 {
-        self.y
-    }
-
-    /// Alias for `height`.
-    #[inline]
-    pub const fn y(self) -> u32 {
-        self.y
+        self.0.y as u32
     }
 
     /// Return the number of cells in a 2D grid of this size.
     pub const fn count(self) -> usize {
-        (self.x * self.y) as usize
+        (self.width() * self.height()) as usize
     }
 
     pub fn checked_sub(self, rhs: Self) -> Option<Self> {
-        self.x
-            .checked_sub(rhs.x)
-            .and_then(|x| self.y.checked_sub(rhs.y).map(|y| Self::new(x, y)))
+        self.width().checked_sub(rhs.width()).and_then(|width| {
+            self.height()
+                .checked_sub(rhs.height())
+                .map(|height| Self::new(width, height))
+        })
     }
 
     pub fn saturating_sub(self, rhs: Self) -> Self {
-        let x = self.x.saturating_sub(rhs.x);
-        let y = self.y.saturating_sub(rhs.y);
-        Self::new(x, y)
+        let width = self.width().saturating_sub(rhs.width());
+        let height = self.height().saturating_sub(rhs.height());
+        Self::new(width, height)
     }
 
     pub const fn max_field() -> u32 {
-        MAX_SIZE_FIELD
+        MAX_UCOORD_FIELD
     }
 
     pub const fn max() -> Self {
-        MAX_SIZE
+        MAX_UCOORD
     }
 
     pub const fn is_zero(self) -> bool {
-        self.x == 0 && self.y == 0
+        self.width() == 0 && self.height() == 0
     }
 
-    pub const fn is_valid(self, coord: Coord) -> bool {
-        coord.is_valid(self)
+    pub const fn is_valid(self, icoord: ICoord) -> bool {
+        icoord.is_valid(self)
     }
 
-    pub const fn constrain(self, coord: Coord) -> Option<Coord> {
-        coord.constrain(self)
+    pub const fn constrain(self, icoord: ICoord) -> Option<ICoord> {
+        icoord.constrain(self)
     }
 
-    pub const fn coord_iter_row_major(self) -> CoordIterRowMajor {
-        CoordIterRowMajor::new(self)
+    pub const fn icoord_iter_row_major(self) -> ICoordIterRowMajor {
+        ICoordIterRowMajor::new(self)
     }
 
     pub fn pairwise_max(self, other: Self) -> Self {
-        Self {
-            x: self.x.max(other.x),
-            y: self.y.max(other.y),
-        }
+        Self::new_unchecked(
+            self.width().max(other.width()),
+            self.height().max(other.height()),
+        )
     }
 
     pub fn pairwise_min(self, other: Self) -> Self {
-        Self {
-            x: self.x.min(other.x),
-            y: self.y.min(other.y),
-        }
+        Self::new_unchecked(
+            self.width().min(other.width()),
+            self.height().min(other.height()),
+        )
     }
 
     pub const fn transpose(self) -> Self {
-        Self {
-            x: self.y,
-            y: self.x,
-        }
+        Self::new_unchecked(self.height(), self.width())
     }
 
     pub const fn is_empty(self) -> bool {
-        self.x == 0 || self.y == 0
+        self.width() == 0 || self.height() == 0
     }
 
-    pub const fn is_on_edge(self, Coord { x, y }: Coord) -> bool {
-        ((x == 0 || x == self.x as i32 - 1) && y >= 0 && y < self.y as i32)
-            || ((y == 0 || y == self.y as i32 - 1) && x >= 0 && x < self.x as i32)
+    pub const fn is_on_edge(self, ICoord { x, y }: ICoord) -> bool {
+        ((x == 0 || x == self.width() as i32 - 1) && y >= 0 && y < self.height() as i32)
+            || ((y == 0 || y == self.height() as i32 - 1) && x >= 0 && x < self.width() as i32)
     }
 
     pub fn edge_iter(self) -> EdgeIter {
@@ -825,7 +666,7 @@ impl Size {
 }
 
 mod edge_iter {
-    use super::{Coord, CoordIterRowMajor, Size};
+    use super::{ICoord, ICoordIterRowMajor, UCoord};
     use core::{
         iter::{Chain, Rev},
         ops::Range,
@@ -836,9 +677,9 @@ mod edge_iter {
     }
 
     impl Iterator for Top {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
-            self.x_range.next().map(|x| Coord { x, y: 0 })
+            self.x_range.next().map(|x| ICoord { x, y: 0 })
         }
     }
 
@@ -848,9 +689,9 @@ mod edge_iter {
     }
 
     impl Iterator for Right {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
-            self.y_range.next().map(|y| Coord { x: self.x, y })
+            self.y_range.next().map(|y| ICoord { x: self.x, y })
         }
     }
 
@@ -860,9 +701,9 @@ mod edge_iter {
     }
 
     impl Iterator for Bottom {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
-            self.x_range.next().map(|x| Coord { x, y: self.y })
+            self.x_range.next().map(|x| ICoord { x, y: self.y })
         }
     }
 
@@ -871,9 +712,9 @@ mod edge_iter {
     }
 
     impl Iterator for Left {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
-            self.y_range.next().map(|y| Coord { x: 0, y })
+            self.y_range.next().map(|y| ICoord { x: 0, y })
         }
     }
 
@@ -881,12 +722,12 @@ mod edge_iter {
 
     enum IterPrivate {
         ZeroDimensional,
-        OneDimensional(CoordIterRowMajor),
+        OneDimensional(ICoordIterRowMajor),
         TwoDimensional(TwoDimensional),
     }
 
     impl Iterator for IterPrivate {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
             match self {
                 Self::ZeroDimensional => None,
@@ -899,31 +740,31 @@ mod edge_iter {
     pub struct Iter(IterPrivate);
 
     impl Iterator for Iter {
-        type Item = Coord;
+        type Item = ICoord;
         fn next(&mut self) -> Option<Self::Item> {
             self.0.next()
         }
     }
 
-    pub fn make_iter(size: Size) -> Iter {
-        let iter_private = if size.is_empty() {
+    pub fn make_iter(ucoord: UCoord) -> Iter {
+        let iter_private = if ucoord.is_empty() {
             IterPrivate::ZeroDimensional
-        } else if size.width() == 1 || size.height() == 1 {
-            IterPrivate::OneDimensional(size.coord_iter_row_major())
+        } else if ucoord.width() == 1 || ucoord.height() == 1 {
+            IterPrivate::OneDimensional(ucoord.icoord_iter_row_major())
         } else {
             let top = Top {
-                x_range: 0..size.width() as i32 - 1,
+                x_range: 0..ucoord.width() as i32 - 1,
             };
             let right = Right {
-                y_range: 0..size.height() as i32 - 1,
-                x: size.width() as i32 - 1,
+                y_range: 0..ucoord.height() as i32 - 1,
+                x: ucoord.width() as i32 - 1,
             };
             let bottom = Bottom {
-                x_range: (1..size.width() as i32).rev(),
-                y: size.height() as i32 - 1,
+                x_range: (1..ucoord.width() as i32).rev(),
+                y: ucoord.height() as i32 - 1,
             };
             let left = Left {
-                y_range: (1..size.height() as i32).rev(),
+                y_range: (1..ucoord.height() as i32).rev(),
             };
             let all = top.chain(right).chain(bottom).chain(left);
             IterPrivate::TwoDimensional(all)
@@ -933,111 +774,114 @@ mod edge_iter {
 }
 pub use edge_iter::Iter as EdgeIter;
 
-impl From<(u32, u32)> for Size {
+impl From<(u32, u32)> for UCoord {
     fn from((x, y): (u32, u32)) -> Self {
-        Size::new(x, y)
+        UCoord::new(x, y)
     }
 }
 
-impl From<[u32; 2]> for Size {
+impl From<[u32; 2]> for UCoord {
     fn from(array: [u32; 2]) -> Self {
-        Size::new(array[0], array[1])
+        UCoord::new(array[0], array[1])
     }
 }
 
-pub struct CoordIterRowMajor {
-    coord: Coord,
-    size: Size,
+pub struct ICoordIterRowMajor {
+    icoord: ICoord,
+    ucoord: UCoord,
 }
 
-impl CoordIterRowMajor {
-    pub const fn new(size: Size) -> Self {
+impl ICoordIterRowMajor {
+    pub const fn new(ucoord: UCoord) -> Self {
         Self {
-            size,
-            coord: Coord { x: 0, y: 0 },
+            ucoord,
+            icoord: ICoord { x: 0, y: 0 },
         }
     }
 }
 
-impl Iterator for CoordIterRowMajor {
-    type Item = Coord;
+impl Iterator for ICoordIterRowMajor {
+    type Item = ICoord;
     fn next(&mut self) -> Option<Self::Item> {
-        if self.coord.y == self.size.height() as i32 {
+        if self.icoord.y == self.ucoord.height() as i32 {
             return None;
         }
-        let coord = self.coord;
-        self.coord.x += 1;
-        if self.coord.x == self.size.width() as i32 {
-            self.coord.x = 0;
-            self.coord.y += 1;
+        let icoord = self.icoord;
+        self.icoord.x += 1;
+        if self.icoord.x == self.ucoord.width() as i32 {
+            self.icoord.x = 0;
+            self.icoord.y += 1;
         }
-        Some(coord)
+        Some(icoord)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::{Coord, Size};
+    use super::{ICoord, UCoord};
 
     #[test]
     fn normalize() {
         assert_eq!(
-            Coord::new(5, 2).normalize(Size::new(2, 3)),
-            Coord::new(1, 2)
+            ICoord::new(5, 2).normalize(UCoord::new(2, 3)),
+            ICoord::new(1, 2)
         );
         assert_eq!(
-            Coord::new(-4, 3).normalize(Size::new(3, 1)),
-            Coord::new(2, 0)
+            ICoord::new(-4, 3).normalize(UCoord::new(3, 1)),
+            ICoord::new(2, 0)
         );
     }
 
     #[test]
     fn manhattan_dsitance() {
-        assert_eq!(Coord::new(-2, 4).manhattan_distance(Coord::new(5, -2)), 13);
+        assert_eq!(
+            ICoord::new(-2, 4).manhattan_distance(ICoord::new(5, -2)),
+            13
+        );
     }
 
     #[test]
     fn rotation() {
-        assert_eq!(Coord::new(2, -3).opposite(), Coord::new(-2, 3));
-        assert_eq!(Coord::new(2, -3).left90(), Coord::new(-3, -2));
-        assert_eq!(Coord::new(2, -3).right90(), Coord::new(3, 2));
-        assert_eq!(Coord::new(0, -1).cardinal_left135(), Coord::new(-1, 1));
-        assert_eq!(Coord::new(0, -1).cardinal_right135(), Coord::new(1, 1));
-        assert_eq!(Coord::new(-1, 0).cardinal_left135(), Coord::new(1, 1));
-        assert_eq!(Coord::new(-1, 0).cardinal_right135(), Coord::new(1, -1));
+        assert_eq!(ICoord::new(2, -3).opposite(), ICoord::new(-2, 3));
+        assert_eq!(ICoord::new(2, -3).left90(), ICoord::new(-3, -2));
+        assert_eq!(ICoord::new(2, -3).right90(), ICoord::new(3, 2));
+        assert_eq!(ICoord::new(0, -1).cardinal_left135(), ICoord::new(-1, 1));
+        assert_eq!(ICoord::new(0, -1).cardinal_right135(), ICoord::new(1, 1));
+        assert_eq!(ICoord::new(-1, 0).cardinal_left135(), ICoord::new(1, 1));
+        assert_eq!(ICoord::new(-1, 0).cardinal_right135(), ICoord::new(1, -1));
     }
 
     #[test]
     fn edge() {
-        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 0)));
-        assert!(Size::new(3, 5).is_on_edge(Coord::new(2, 0)));
-        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 3)));
-        assert!(Size::new(3, 5).is_on_edge(Coord::new(0, 4)));
-        assert!(Size::new(3, 5).is_on_edge(Coord::new(1, 4)));
-        assert!(!Size::new(3, 5).is_on_edge(Coord::new(1, 5)));
+        assert!(UCoord::new(3, 5).is_on_edge(ICoord::new(0, 0)));
+        assert!(UCoord::new(3, 5).is_on_edge(ICoord::new(2, 0)));
+        assert!(UCoord::new(3, 5).is_on_edge(ICoord::new(0, 3)));
+        assert!(UCoord::new(3, 5).is_on_edge(ICoord::new(0, 4)));
+        assert!(UCoord::new(3, 5).is_on_edge(ICoord::new(1, 4)));
+        assert!(!UCoord::new(3, 5).is_on_edge(ICoord::new(1, 5)));
     }
 
     #[test]
     #[cfg(feature = "std")]
     fn edge_iter() {
         use std::collections::BTreeSet;
-        fn test(size: Size) {
-            let brute_forced = size
-                .coord_iter_row_major()
-                .filter(|&c| size.is_on_edge(c))
+        fn test(ucoord: UCoord) {
+            let brute_forced = ucoord
+                .icoord_iter_row_major()
+                .filter(|&c| ucoord.is_on_edge(c))
                 .collect::<Vec<_>>();
-            let via_iter = size.edge_iter().collect::<Vec<_>>();
+            let via_iter = ucoord.edge_iter().collect::<Vec<_>>();
             assert_eq!(brute_forced.len(), via_iter.len());
             assert_eq!(
                 brute_forced.iter().cloned().collect::<BTreeSet<_>>(),
                 via_iter.iter().cloned().collect::<BTreeSet<_>>(),
             );
         }
-        test(Size::new(0, 0));
-        test(Size::new(1, 1));
-        test(Size::new(1, 3));
-        test(Size::new(3, 1));
-        test(Size::new(2, 2));
-        test(Size::new(3, 5));
+        test(UCoord::new(0, 0));
+        test(UCoord::new(1, 1));
+        test(UCoord::new(1, 3));
+        test(UCoord::new(3, 1));
+        test(UCoord::new(2, 2));
+        test(UCoord::new(3, 5));
     }
 }

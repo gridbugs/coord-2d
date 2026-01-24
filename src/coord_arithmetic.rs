@@ -1,438 +1,462 @@
-use crate::coord::{Coord, Size};
+use crate::coord::{ICoord, UCoord};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-impl Neg for Coord {
-    type Output = Coord;
+impl Neg for ICoord {
+    type Output = ICoord;
     fn neg(self) -> Self::Output {
-        Coord {
+        ICoord {
             x: -self.x,
             y: -self.y,
         }
     }
 }
 
-impl<'a> Neg for &'a Coord {
-    type Output = Coord;
+impl<'a> Neg for &'a ICoord {
+    type Output = ICoord;
     fn neg(self) -> Self::Output {
-        Coord {
+        ICoord {
             x: -self.x,
             y: -self.y,
         }
     }
 }
 
-impl Add for Coord {
-    type Output = Coord;
-    fn add(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
+impl Add for ICoord {
+    type Output = ICoord;
+    fn add(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
             x: self.x + x,
             y: self.y + y,
         }
     }
 }
 
-impl<'a> Add<Coord> for &'a Coord {
-    type Output = Coord;
-    fn add(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
+impl<'a> Add<ICoord> for &'a ICoord {
+    type Output = ICoord;
+    fn add(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
             x: self.x + x,
             y: self.y + y,
         }
     }
 }
 
-impl<'a> Add<&'a Coord> for Coord {
-    type Output = Coord;
-    fn add(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
+impl<'a> Add<&'a ICoord> for ICoord {
+    type Output = ICoord;
+    fn add(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
             x: self.x + x,
             y: self.y + y,
         }
     }
 }
 
-impl<'a, 'b> Add<&'a Coord> for &'b Coord {
-    type Output = Coord;
-    fn add(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
+impl<'a, 'b> Add<&'a ICoord> for &'b ICoord {
+    type Output = ICoord;
+    fn add(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
             x: self.x + x,
             y: self.y + y,
         }
     }
 }
 
-impl Add<Size> for Coord {
-    type Output = Coord;
-    fn add(self, size: Size) -> Self::Output {
-        Coord {
-            x: self.x + size.x() as i32,
-            y: self.y + size.y() as i32,
+impl Add<UCoord> for ICoord {
+    type Output = ICoord;
+    fn add(self, ucoord: UCoord) -> Self::Output {
+        ICoord {
+            x: self.x + ucoord.width() as i32,
+            y: self.y + ucoord.height() as i32,
         }
     }
 }
 
-impl<'a> Add<Size> for &'a Coord {
-    type Output = Coord;
-    fn add(self, size: Size) -> Self::Output {
-        Coord {
-            x: self.x + size.x() as i32,
-            y: self.y + size.y() as i32,
+impl<'a> Add<UCoord> for &'a ICoord {
+    type Output = ICoord;
+    fn add(self, ucoord: UCoord) -> Self::Output {
+        ICoord {
+            x: self.x + ucoord.width() as i32,
+            y: self.y + ucoord.height() as i32,
         }
     }
 }
 
-impl<'a> Add<&'a Size> for Coord {
-    type Output = Coord;
-    fn add(self, size: &'a Size) -> Self::Output {
-        Coord {
-            x: self.x + size.x() as i32,
-            y: self.y + size.y() as i32,
+impl<'a> Add<&'a UCoord> for ICoord {
+    type Output = ICoord;
+    fn add(self, ucoord: &'a UCoord) -> Self::Output {
+        ICoord {
+            x: self.x + ucoord.width() as i32,
+            y: self.y + ucoord.height() as i32,
         }
     }
 }
 
-impl<'a, 'b> Add<&'a Size> for &'b Coord {
-    type Output = Coord;
-    fn add(self, size: &'a Size) -> Self::Output {
-        Coord {
-            x: self.x + size.x() as i32,
-            y: self.y + size.y() as i32,
+impl<'a, 'b> Add<&'a UCoord> for &'b ICoord {
+    type Output = ICoord;
+    fn add(self, ucoord: &'a UCoord) -> Self::Output {
+        ICoord {
+            x: self.x + ucoord.width() as i32,
+            y: self.y + ucoord.height() as i32,
         }
     }
 }
 
-impl Add<Coord> for Size {
-    type Output = Coord;
-    fn add(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 + x,
-            y: self.y() as i32 + y,
+impl Add<ICoord> for UCoord {
+    type Output = ICoord;
+    fn add(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 + x,
+            y: self.height() as i32 + y,
         }
     }
 }
 
-impl<'a> Add<Coord> for &'a Size {
-    type Output = Coord;
-    fn add(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 + x,
-            y: self.y() as i32 + y,
+impl<'a> Add<ICoord> for &'a UCoord {
+    type Output = ICoord;
+    fn add(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 + x,
+            y: self.height() as i32 + y,
         }
     }
 }
 
-impl<'a> Add<&'a Coord> for Size {
-    type Output = Coord;
-    fn add(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 + x,
-            y: self.y() as i32 + y,
+impl<'a> Add<&'a ICoord> for UCoord {
+    type Output = ICoord;
+    fn add(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 + x,
+            y: self.height() as i32 + y,
         }
     }
 }
 
-impl<'a, 'b> Add<&'a Coord> for &'b Size {
-    type Output = Coord;
-    fn add(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 + x,
-            y: self.y() as i32 + y,
+impl<'a, 'b> Add<&'a ICoord> for &'b UCoord {
+    type Output = ICoord;
+    fn add(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 + x,
+            y: self.height() as i32 + y,
         }
     }
 }
 
-impl Add for Size {
-    type Output = Size;
-    fn add(self, size: Size) -> Self::Output {
-        Size::new(self.x() + size.x(), self.y() + size.y())
+impl Add for UCoord {
+    type Output = UCoord;
+    fn add(self, ucoord: UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() + ucoord.width(),
+            self.height() + ucoord.height(),
+        )
     }
 }
 
-impl<'a> Add<Size> for &'a Size {
-    type Output = Size;
-    fn add(self, size: Size) -> Self::Output {
-        Size::new(self.x() + size.x(), self.y() + size.y())
+impl<'a> Add<UCoord> for &'a UCoord {
+    type Output = UCoord;
+    fn add(self, ucoord: UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() + ucoord.width(),
+            self.height() + ucoord.height(),
+        )
     }
 }
 
-impl<'a> Add<&'a Size> for Size {
-    type Output = Size;
-    fn add(self, size: &'a Size) -> Self::Output {
-        Size::new(self.x() + size.x(), self.y() + size.y())
+impl<'a> Add<&'a UCoord> for UCoord {
+    type Output = UCoord;
+    fn add(self, ucoord: &'a UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() + ucoord.width(),
+            self.height() + ucoord.height(),
+        )
     }
 }
 
-impl<'a, 'b> Add<&'a Size> for &'b Size {
-    type Output = Size;
-    fn add(self, size: &'a Size) -> Self::Output {
-        Size::new(self.x() + size.x(), self.y() + size.y())
+impl<'a, 'b> Add<&'a UCoord> for &'b UCoord {
+    type Output = UCoord;
+    fn add(self, ucoord: &'a UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() + ucoord.width(),
+            self.height() + ucoord.height(),
+        )
     }
 }
 
-impl<T> AddAssign<T> for Coord
+impl<T> AddAssign<T> for ICoord
 where
-    Coord: Add<T, Output = Coord>,
+    ICoord: Add<T, Output = ICoord>,
 {
     fn add_assign(&mut self, rhs: T) {
         *self = *self + rhs;
     }
 }
 
-impl Sub for Coord {
-    type Output = Coord;
-    fn sub(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
+impl Sub for ICoord {
+    type Output = ICoord;
+    fn sub(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
             x: self.x - x,
             y: self.y - y,
         }
     }
 }
 
-impl<'a> Sub<Coord> for &'a Coord {
-    type Output = Coord;
-    fn sub(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
+impl<'a> Sub<ICoord> for &'a ICoord {
+    type Output = ICoord;
+    fn sub(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
             x: self.x - x,
             y: self.y - y,
         }
     }
 }
 
-impl<'a> Sub<&'a Coord> for Coord {
-    type Output = Coord;
-    fn sub(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
+impl<'a> Sub<&'a ICoord> for ICoord {
+    type Output = ICoord;
+    fn sub(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
             x: self.x - x,
             y: self.y - y,
         }
     }
 }
 
-impl<'a, 'b> Sub<&'a Coord> for &'b Coord {
-    type Output = Coord;
-    fn sub(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
+impl<'a, 'b> Sub<&'a ICoord> for &'b ICoord {
+    type Output = ICoord;
+    fn sub(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
             x: self.x - x,
             y: self.y - y,
         }
     }
 }
 
-impl Sub<Size> for Coord {
-    type Output = Coord;
-    fn sub(self, size: Size) -> Self::Output {
-        Coord {
-            x: self.x - size.x() as i32,
-            y: self.y - size.y() as i32,
+impl Sub<UCoord> for ICoord {
+    type Output = ICoord;
+    fn sub(self, ucoord: UCoord) -> Self::Output {
+        ICoord {
+            x: self.x - ucoord.width() as i32,
+            y: self.y - ucoord.height() as i32,
         }
     }
 }
 
-impl<'a> Sub<Size> for &'a Coord {
-    type Output = Coord;
-    fn sub(self, size: Size) -> Self::Output {
-        Coord {
-            x: self.x - size.x() as i32,
-            y: self.y - size.y() as i32,
+impl<'a> Sub<UCoord> for &'a ICoord {
+    type Output = ICoord;
+    fn sub(self, ucoord: UCoord) -> Self::Output {
+        ICoord {
+            x: self.x - ucoord.width() as i32,
+            y: self.y - ucoord.height() as i32,
         }
     }
 }
 
-impl<'a> Sub<&'a Size> for Coord {
-    type Output = Coord;
-    fn sub(self, size: &'a Size) -> Self::Output {
-        Coord {
-            x: self.x - size.x() as i32,
-            y: self.y - size.y() as i32,
+impl<'a> Sub<&'a UCoord> for ICoord {
+    type Output = ICoord;
+    fn sub(self, ucoord: &'a UCoord) -> Self::Output {
+        ICoord {
+            x: self.x - ucoord.width() as i32,
+            y: self.y - ucoord.height() as i32,
         }
     }
 }
 
-impl<'a, 'b> Sub<&'a Size> for &'b Coord {
-    type Output = Coord;
-    fn sub(self, size: &'a Size) -> Self::Output {
-        Coord {
-            x: self.x - size.x() as i32,
-            y: self.y - size.y() as i32,
+impl<'a, 'b> Sub<&'a UCoord> for &'b ICoord {
+    type Output = ICoord;
+    fn sub(self, ucoord: &'a UCoord) -> Self::Output {
+        ICoord {
+            x: self.x - ucoord.width() as i32,
+            y: self.y - ucoord.height() as i32,
         }
     }
 }
 
-impl Sub<Coord> for Size {
-    type Output = Coord;
-    fn sub(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 - x,
-            y: self.y() as i32 - y,
+impl Sub<ICoord> for UCoord {
+    type Output = ICoord;
+    fn sub(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 - x,
+            y: self.height() as i32 - y,
         }
     }
 }
 
-impl<'a> Sub<Coord> for &'a Size {
-    type Output = Coord;
-    fn sub(self, Coord { x, y }: Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 - x,
-            y: self.y() as i32 - y,
+impl<'a> Sub<ICoord> for &'a UCoord {
+    type Output = ICoord;
+    fn sub(self, ICoord { x, y }: ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 - x,
+            y: self.height() as i32 - y,
         }
     }
 }
 
-impl<'a> Sub<&'a Coord> for Size {
-    type Output = Coord;
-    fn sub(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 - x,
-            y: self.y() as i32 - y,
+impl<'a> Sub<&'a ICoord> for UCoord {
+    type Output = ICoord;
+    fn sub(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 - x,
+            y: self.height() as i32 - y,
         }
     }
 }
 
-impl<'a, 'b> Sub<&'a Coord> for &'b Size {
-    type Output = Coord;
-    fn sub(self, &Coord { x, y }: &'a Coord) -> Self::Output {
-        Coord {
-            x: self.x() as i32 - x,
-            y: self.y() as i32 - y,
+impl<'a, 'b> Sub<&'a ICoord> for &'b UCoord {
+    type Output = ICoord;
+    fn sub(self, &ICoord { x, y }: &'a ICoord) -> Self::Output {
+        ICoord {
+            x: self.width() as i32 - x,
+            y: self.height() as i32 - y,
         }
     }
 }
 
-impl Sub for Size {
-    type Output = Size;
-    fn sub(self, size: Size) -> Self::Output {
-        Size::new(self.x() - size.x(), self.y() - size.y())
+impl Sub for UCoord {
+    type Output = UCoord;
+    fn sub(self, ucoord: UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() - ucoord.width(),
+            self.height() - ucoord.height(),
+        )
     }
 }
 
-impl<'a> Sub<Size> for &'a Size {
-    type Output = Size;
-    fn sub(self, size: Size) -> Self::Output {
-        Size::new(self.x() - size.x(), self.y() - size.y())
+impl<'a> Sub<UCoord> for &'a UCoord {
+    type Output = UCoord;
+    fn sub(self, ucoord: UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() - ucoord.width(),
+            self.height() - ucoord.height(),
+        )
     }
 }
 
-impl<'a> Sub<&'a Size> for Size {
-    type Output = Size;
-    fn sub(self, size: &'a Size) -> Self::Output {
-        Size::new(self.x() - size.x(), self.y() - size.y())
+impl<'a> Sub<&'a UCoord> for UCoord {
+    type Output = UCoord;
+    fn sub(self, ucoord: &'a UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() - ucoord.width(),
+            self.height() - ucoord.height(),
+        )
     }
 }
 
-impl<'a, 'b> Sub<&'a Size> for &'b Size {
-    type Output = Size;
-    fn sub(self, size: &'a Size) -> Self::Output {
-        Size::new(self.x() - size.x(), self.y() - size.y())
+impl<'a, 'b> Sub<&'a UCoord> for &'b UCoord {
+    type Output = UCoord;
+    fn sub(self, ucoord: &'a UCoord) -> Self::Output {
+        UCoord::new(
+            self.width() - ucoord.width(),
+            self.height() - ucoord.height(),
+        )
     }
 }
 
-impl<T> SubAssign<T> for Coord
+impl<T> SubAssign<T> for ICoord
 where
-    Coord: Sub<T, Output = Coord>,
+    ICoord: Sub<T, Output = ICoord>,
 {
     fn sub_assign(&mut self, rhs: T) {
         *self = *self - rhs;
     }
 }
 
-impl Mul<i32> for Coord {
-    type Output = Coord;
+impl Mul<i32> for ICoord {
+    type Output = ICoord;
     fn mul(self, rhs: i32) -> Self::Output {
-        Coord {
+        ICoord {
             x: self.x * rhs,
             y: self.y * rhs,
         }
     }
 }
 
-impl<'a> Mul<i32> for &'a Coord {
-    type Output = Coord;
+impl<'a> Mul<i32> for &'a ICoord {
+    type Output = ICoord;
     fn mul(self, rhs: i32) -> Self::Output {
-        Coord {
+        ICoord {
             x: self.x * rhs,
             y: self.y * rhs,
         }
     }
 }
 
-impl<T> MulAssign<T> for Coord
+impl<T> MulAssign<T> for ICoord
 where
-    Coord: Mul<T, Output = Coord>,
+    ICoord: Mul<T, Output = ICoord>,
 {
     fn mul_assign(&mut self, rhs: T) {
         *self = *self * rhs;
     }
 }
 
-impl Mul<u32> for Size {
-    type Output = Size;
+impl Mul<u32> for UCoord {
+    type Output = UCoord;
     fn mul(self, rhs: u32) -> Self::Output {
-        Size::new(self.x() * rhs, self.y() * rhs)
+        UCoord::new(self.width() * rhs, self.height() * rhs)
     }
 }
 
-impl<'a> Mul<u32> for &'a Size {
-    type Output = Size;
+impl<'a> Mul<u32> for &'a UCoord {
+    type Output = UCoord;
     fn mul(self, rhs: u32) -> Self::Output {
-        Size::new(self.x() * rhs, self.y() * rhs)
+        UCoord::new(self.width() * rhs, self.height() * rhs)
     }
 }
 
-impl<T> MulAssign<T> for Size
+impl<T> MulAssign<T> for UCoord
 where
-    Size: Mul<T, Output = Size>,
+    UCoord: Mul<T, Output = UCoord>,
 {
     fn mul_assign(&mut self, rhs: T) {
         *self = *self * rhs;
     }
 }
 
-impl Div<i32> for Coord {
-    type Output = Coord;
+impl Div<i32> for ICoord {
+    type Output = ICoord;
     fn div(self, rhs: i32) -> Self::Output {
-        Coord {
+        ICoord {
             x: self.x / rhs,
             y: self.y / rhs,
         }
     }
 }
 
-impl<'a> Div<i32> for &'a Coord {
-    type Output = Coord;
+impl<'a> Div<i32> for &'a ICoord {
+    type Output = ICoord;
     fn div(self, rhs: i32) -> Self::Output {
-        Coord {
+        ICoord {
             x: self.x / rhs,
             y: self.y / rhs,
         }
     }
 }
 
-impl<T> DivAssign<T> for Coord
+impl<T> DivAssign<T> for ICoord
 where
-    Coord: Div<T, Output = Coord>,
+    ICoord: Div<T, Output = ICoord>,
 {
     fn div_assign(&mut self, rhs: T) {
         *self = *self / rhs;
     }
 }
 
-impl Div<u32> for Size {
-    type Output = Size;
+impl Div<u32> for UCoord {
+    type Output = UCoord;
     fn div(self, rhs: u32) -> Self::Output {
-        Size::new(self.x() / rhs, self.y() / rhs)
+        UCoord::new(self.width() / rhs, self.height() / rhs)
     }
 }
 
-impl<'a> Div<u32> for &'a Size {
-    type Output = Size;
+impl<'a> Div<u32> for &'a UCoord {
+    type Output = UCoord;
     fn div(self, rhs: u32) -> Self::Output {
-        Size::new(self.x() / rhs, self.y() / rhs)
+        UCoord::new(self.width() / rhs, self.height() / rhs)
     }
 }
 
-impl<T> DivAssign<T> for Size
+impl<T> DivAssign<T> for UCoord
 where
-    Size: Div<T, Output = Size>,
+    UCoord: Div<T, Output = UCoord>,
 {
     fn div_assign(&mut self, rhs: T) {
         *self = *self / rhs;
@@ -441,26 +465,26 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::coord::{Coord, Size};
+    use crate::coord::{ICoord, UCoord};
 
     #[test]
     fn arithmetic() {
-        let mut a = Coord::new(0, 0);
-        let _ = a + Coord::new(0, 0);
-        let _ = &a + Coord::new(0, 0);
-        let _ = a + &Coord::new(0, 0);
-        let _ = &a + &Coord::new(0, 0);
-        let _ = a + Size::new(0, 0);
-        let _ = &a + Size::new(0, 0);
-        let _ = a + &Size::new(0, 0);
-        let _ = &a + &Size::new(0, 0);
-        let _ = Size::new(0, 0) + a;
-        let _ = &Size::new(0, 0) + a;
-        let _ = Size::new(0, 0) + &a;
-        let _ = &Size::new(0, 0) + &a;
-        let _ = a += Size::new(0, 0);
-        let _ = a += Coord::new(0, 0);
-        let _ = a += &Size::new(0, 0);
-        let _ = a += &Coord::new(0, 0);
+        let mut a = ICoord::new(0, 0);
+        let _ = a + ICoord::new(0, 0);
+        let _ = &a + ICoord::new(0, 0);
+        let _ = a + &ICoord::new(0, 0);
+        let _ = &a + &ICoord::new(0, 0);
+        let _ = a + UCoord::new(0, 0);
+        let _ = &a + UCoord::new(0, 0);
+        let _ = a + &UCoord::new(0, 0);
+        let _ = &a + &UCoord::new(0, 0);
+        let _ = UCoord::new(0, 0) + a;
+        let _ = &UCoord::new(0, 0) + a;
+        let _ = UCoord::new(0, 0) + &a;
+        let _ = &UCoord::new(0, 0) + &a;
+        let _ = a += UCoord::new(0, 0);
+        let _ = a += ICoord::new(0, 0);
+        let _ = a += &UCoord::new(0, 0);
+        let _ = a += &ICoord::new(0, 0);
     }
 }
