@@ -185,8 +185,8 @@ impl ICoord {
     }
     #[cfg(feature = "rand")]
     pub fn random_within<R: rand::Rng>(ucoord: UCoord, rng: &mut R) -> Self {
-        let x = rng.gen_range(0..ucoord.width() as i32);
-        let y = rng.gen_range(0..ucoord.height() as i32);
+        let x = rng.random_range(0..ucoord.width() as i32);
+        let y = rng.random_range(0..ucoord.height() as i32);
         Self { x, y }
     }
     pub fn to_ucoord(self) -> UCoord {
