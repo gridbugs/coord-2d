@@ -426,6 +426,11 @@ impl ICoord {
     }
 }
 
+/// Shorthand for ICoord::new
+pub const fn icoord(x: i32, y: i32) -> ICoord {
+    ICoord::new(x, y)
+}
+
 impl From<(i32, i32)> for ICoord {
     fn from((x, y): (i32, i32)) -> Self {
         ICoord::new(x, y)
@@ -663,6 +668,16 @@ impl UCoord {
     pub fn edge_iter(self) -> EdgeIter {
         edge_iter::make_iter(self)
     }
+}
+
+/// Shorthand for UCoord::new
+pub fn ucoord(width: u32, height: u32) -> UCoord {
+    UCoord::new(width, height)
+}
+
+/// Shorthand for UCoord::new_u16
+pub const fn ucoord_u16(width: u16, height: u16) -> UCoord {
+    UCoord::new_u16(width, height)
 }
 
 mod edge_iter {
